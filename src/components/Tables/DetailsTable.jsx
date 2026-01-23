@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import Pagination from "@mui/material/Pagination";
+import { formatFecha } from "../../utils/date";
 
 function toCsvValue(v) {
   if (v === null || v === undefined) return "";
@@ -77,17 +78,23 @@ function TableBlock({
                 </td>
               </tr>
             ) : (
-              pagedRows.map((r, idx) => (
-                <tr key={r.contactId ?? `${title}-${page}-${idx}`}>
-                  <td className="font-bold">{r.contactId}</td>
-                  <td className="text-dim">{r.fechaRegistro}</td>
-                  <td>{r.nombreCliente}</td>
-                  <td>{r.tipificacion ?? r.Tipificacion}</td>
-                  <td>{r.asesorCobro}</td>
-                </tr>
-              ))
+              pagedRows.map((r, idx) => {
+                const fechaLegible = formatFecha(r.fechaRegistro);
+
+                return (
+                  <tr key={r.contactId ?? `${title}-${page}-${idx}`}>
+                    <td className="font-bold">{r.telefonoCliente}</td>
+                    <td className="text-dim">{fechaLegible}</td>
+                    <td>{r.nombreCliente}</td>
+                    <td>{r.tipificacion ?? r.Tipificacion}</td>
+                    <td>{r.asesorCobro}</td>
+                    <td>{r.contactId}</td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
+
         </table>
 
         {pageCount > 1 && (
@@ -116,11 +123,13 @@ export default function DetailsTable({ data, loading, error }) {
   const rows = data?.data ?? [];
 
   const columns = [
-    { label: "Contact ID", key: "contactId" },
+    { label: "Teléfono ", key: "telefonoCliente" },
     { label: "Fecha", key: "fechaRegistro" },
     { label: "Cliente", key: "nombreCliente" },
     { label: "Tipificación", key: "tipificacion" },
     { label: "Asesor", key: "asesorCobro" },
+    { label: "Contact ID", key: "contactId" },
+
   ];
 
   // ✅ split into two lists based on `llamadas`
