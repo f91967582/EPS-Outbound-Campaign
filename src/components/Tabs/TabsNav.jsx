@@ -1,9 +1,9 @@
 export default function TabsNav({ active, onChange }) {
   return (
     <div className="tabs-nav">
-      <button
-        className={`tab-btn ${active === "dashboard" ? "active" : ""}`}
-        onClick={() => onChange("dashboard")}
+            <button
+        className={`tab-btn ${active === "mainview" ? "active" : ""}`}
+        onClick={() => onChange("mainview")}
       >
         Vista General
       </button>
@@ -13,6 +13,7 @@ export default function TabsNav({ active, onChange }) {
       >
         Listado de Contactos
       </button>
+
     </div>
   );
 }

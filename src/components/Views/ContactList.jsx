@@ -119,7 +119,7 @@ function TableBlock({
   );
 }
 
-export default function DetailsTable({ data, loading, error }) {
+export default function ContactList({ data, loading, error }) {
   const rows = data?.data ?? [];
 
   const columns = [
