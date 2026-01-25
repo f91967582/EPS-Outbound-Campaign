@@ -1,17 +1,16 @@
-// src/utils/date.js
-export function formatFecha(isoString, locale = "es-ES") {
-  if (!isoString) return "";
+export function formatFecha(value) {
+  const d = new Date(value);
 
-  const date = new Date(isoString);
-
-  // If invalid date, avoid showing "Invalid Date"
-  if (Number.isNaN(date.getTime())) return "";
-
-  return date.toLocaleString(locale, {
+  const date = d.toLocaleDateString("es-ES", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
+  });
+
+  const time = d.toLocaleTimeString("es-ES", {
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  return `${date} ${time}`;
 }

@@ -94,7 +94,6 @@ function TableBlock({
               })
             )}
           </tbody>
-
         </table>
 
         {pageCount > 1 && (
@@ -123,28 +122,33 @@ export default function ContactList({ data, loading, error }) {
   const rows = data?.data ?? [];
 
   const columns = [
-    { label: "Teléfono ", key: "telefonoCliente" },
+    { label: "Teléfono", key: "telefonoCliente" },
     { label: "Fecha", key: "fechaRegistro" },
     { label: "Cliente", key: "nombreCliente" },
     { label: "Tipificación", key: "tipificacion" },
     { label: "Asesor", key: "asesorCobro" },
     { label: "Contact ID", key: "contactId" },
-
   ];
 
-  // ✅ split into two lists based on `llamadas`
+  // ✅ SORT BY DATE (newest first)
+  const sortedRows = useMemo(() => {
+    return [...rows].sort(
+      (a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro)
+    );
+  }, [rows]);
+
   const { entrantesRows, salientesRows } = useMemo(() => {
     const entrantesRows = [];
     const salientesRows = [];
 
-    for (const r of rows) {
-      const dir = normalize(r?.llamadas); // "entrante" | "saliente"
+    for (const r of sortedRows) {
+      const dir = normalize(r?.llamadas);
       if (dir === "entrante") entrantesRows.push(r);
       else if (dir === "saliente") salientesRows.push(r);
     }
 
     return { entrantesRows, salientesRows };
-  }, [rows]);
+  }, [sortedRows]);
 
   const stamp = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
@@ -154,16 +158,14 @@ export default function ContactList({ data, loading, error }) {
   const downloadSalientes = () =>
     downloadCsv(`detalle-salientes-${stamp}.csv`, columns, salientesRows);
 
-  // optional: download all
   const downloadAll = () =>
-    downloadCsv(`detalle-registros-${stamp}.csv`, columns, rows);
+    downloadCsv(`detalle-registros-${stamp}.csv`, columns, sortedRows);
 
   if (loading) return <p>Loading details...</p>;
   if (error) return <p>{String(error)}</p>;
 
   return (
     <div>
-      {/* optional global header/actions */}
       <div className="panel-header" style={{ marginBottom: "1rem" }}>
         <span className="panel-title">
           Detalle de Registros (Entrantes / Salientes)
