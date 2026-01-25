@@ -1,12 +1,13 @@
 import { useMemo, useState, useEffect } from "react";
 import Pagination from "@mui/material/Pagination";
+import TextField from "@mui/material/TextField";
+import Autocomplete from "@mui/material/Autocomplete";
 import { formatFecha } from "../../utils/date";
 
 function toCsvValue(v) {
-  if (v === null || v === undefined) return "";
-  const s = String(v);
-  const escaped = s.replace(/"/g, '""');
-  return /[",\n\r]/.test(escaped) ? `"${escaped}"` : escaped;
+  if (v == null) return "";
+  const s = String(v).replace(/"/g, '""');
+  return /[",\n\r]/.test(s) ? `"${s}"` : s;
 }
 
 function downloadCsv(filename, columns, data) {
@@ -16,16 +17,13 @@ function downloadCsv(filename, columns, data) {
   );
 
   const csv = [header, ...lines].join("\r\n");
-
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
-  document.body.appendChild(a);
   a.click();
-  a.remove();
 
   URL.revokeObjectURL(url);
 }
@@ -36,15 +34,28 @@ function TableBlock({
   title,
   rows,
   columns,
-  rowsPerPage = 10,
-  emptyText = "No data",
   onDownloadCsv,
+  rowsPerPage = 10,
+  resetKey,
+
+  // filters
+  clienteFilter,
+  setClienteFilter,
+  tipificacionFilter,
+  setTipificacionFilter,
+  tipificacionOptions,
+  fechaDesde,
+  setFechaDesde,
+  fechaHasta,
+  setFechaHasta,
 }) {
   const [page, setPage] = useState(1);
 
-  useEffect(() => setPage(1), [rows.length]);
+  useEffect(() => {
+    setPage(1);
+  }, [resetKey]);
 
-  const pageCount = Math.ceil(rows.length / rowsPerPage);
+  const pageCount = Math.max(1, Math.ceil(rows.length / rowsPerPage));
 
   const pagedRows = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
@@ -52,7 +63,7 @@ function TableBlock({
   }, [rows, page, rowsPerPage]);
 
   return (
-    <div className="data-table-wrapper" style={{ marginBottom: "1rem" }}>
+    <div className="data-table-wrapper" style={{ marginBottom: "1.5rem" }}>
       <div className="panel-header">
         <span className="panel-title">{title}</span>
         <button className="btn-white" onClick={onDownloadCsv}>
@@ -63,51 +74,97 @@ function TableBlock({
       <div className="panel-body">
         <table className="data-table">
           <thead>
+            {/* Column labels */}
             <tr>
               {columns.map((c) => (
                 <th key={c.key}>{c.label}</th>
               ))}
             </tr>
+
+            {/* Column filters */}
+            <tr>
+              {/* Teléfono */}
+              <th />
+
+              {/* Fecha */}
+              <th>
+                <TextField
+                  type="date"
+                  size="small"
+                  value={fechaDesde}
+                  onChange={(e) => setFechaDesde(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                />
+                <TextField
+                  type="date"
+                  size="small"
+                  value={fechaHasta}
+                  onChange={(e) => setFechaHasta(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ mt: 0.5 }}
+                />
+              </th>
+
+              {/* Cliente */}
+              <th>
+                <TextField
+                  size="small"
+                  placeholder="Buscar"
+                  value={clienteFilter}
+                  onChange={(e) => setClienteFilter(e.target.value)}
+                />
+              </th>
+
+              {/* Tipificación */}
+              <th>
+                <Autocomplete
+                  size="small"
+                  options={tipificacionOptions}
+                  value={tipificacionFilter}
+                  onChange={(_, v) => setTipificacionFilter(v)}
+                  renderInput={(params) => (
+                    <TextField {...params} placeholder="Todas" />
+                  )}
+                  clearOnEscape
+                />
+              </th>
+
+              {/* Asesor */}
+              <th />
+
+              {/* Contact ID */}
+              <th />
+            </tr>
           </thead>
 
           <tbody>
-            {rows.length === 0 ? (
+            {pagedRows.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} style={{ textAlign: "center" }}>
-                  {emptyText}
+                  No data
                 </td>
               </tr>
             ) : (
-              pagedRows.map((r, idx) => {
-                const fechaLegible = formatFecha(r.fechaRegistro);
-
-                return (
-                  <tr key={r.contactId ?? `${title}-${page}-${idx}`}>
-                    <td className="font-bold">{r.telefonoCliente}</td>
-                    <td className="text-dim">{fechaLegible}</td>
-                    <td>{r.nombreCliente}</td>
-                    <td>{r.tipificacion ?? r.Tipificacion}</td>
-                    <td>{r.asesorCobro}</td>
-                    <td>{r.contactId}</td>
-                  </tr>
-                );
-              })
+              pagedRows.map((r, idx) => (
+                <tr key={r.contactId ?? idx}>
+                  <td>{r.telefonoCliente}</td>
+                  <td>{formatFecha(r.fechaRegistro)}</td>
+                  <td>{r.nombreCliente}</td>
+                  <td>{r.tipificacion ?? r.Tipificacion}</td>
+                  <td>{r.asesorCobro}</td>
+                  <td>{r.contactId}</td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
 
         {pageCount > 1 && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginTop: "1rem",
-            }}
-          >
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
             <Pagination
               count={pageCount}
               page={page}
-              onChange={(_, value) => setPage(value)}
+              onChange={(_, v) => setPage(v)}
               shape="rounded"
               variant="outlined"
             />
@@ -121,6 +178,11 @@ function TableBlock({
 export default function ContactList({ data, loading, error }) {
   const rows = data?.data ?? [];
 
+  const [clienteFilter, setClienteFilter] = useState("");
+  const [tipificacionFilter, setTipificacionFilter] = useState(null);
+  const [fechaDesde, setFechaDesde] = useState("");
+  const [fechaHasta, setFechaHasta] = useState("");
+
   const columns = [
     { label: "Teléfono", key: "telefonoCliente" },
     { label: "Fecha", key: "fechaRegistro" },
@@ -130,63 +192,101 @@ export default function ContactList({ data, loading, error }) {
     { label: "Contact ID", key: "contactId" },
   ];
 
-  // ✅ SORT BY DATE (newest first)
-  const sortedRows = useMemo(() => {
-    return [...rows].sort(
-      (a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro)
-    );
+  const tipificacionOptions = useMemo(() => {
+    const set = new Set();
+    for (const r of rows) {
+      const raw = r.tipificacion ?? r.Tipificacion;
+      if (raw) set.add(raw.trim());
+    }
+    return Array.from(set).sort();
   }, [rows]);
 
-  const { entrantesRows, salientesRows } = useMemo(() => {
-    const entrantesRows = [];
-    const salientesRows = [];
+  const filteredRows = useMemo(() => {
+    const hastaDate = fechaHasta
+      ? new Date(fechaHasta + "T23:59:59")
+      : null;
 
-    for (const r of sortedRows) {
-      const dir = normalize(r?.llamadas);
-      if (dir === "entrante") entrantesRows.push(r);
-      else if (dir === "saliente") salientesRows.push(r);
+    return rows
+      .filter((r) => {
+        if (
+          clienteFilter &&
+          !normalize(r.nombreCliente).includes(normalize(clienteFilter))
+        )
+          return false;
+
+        if (
+          tipificacionFilter &&
+          normalize(r.tipificacion ?? r.Tipificacion) !==
+            normalize(tipificacionFilter)
+        )
+          return false;
+
+        const fecha = new Date(r.fechaRegistro);
+        if (fechaDesde && fecha < new Date(fechaDesde)) return false;
+        if (hastaDate && fecha > hastaDate) return false;
+
+        return true;
+      })
+      .sort((a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
+  }, [rows, clienteFilter, tipificacionFilter, fechaDesde, fechaHasta]);
+
+  const { entrantesRows, salientesRows } = useMemo(() => {
+    const e = [];
+    const s = [];
+
+    for (const r of filteredRows) {
+      const dir = normalize(r.llamadas);
+      if (dir === "entrante") e.push(r);
+      else if (dir === "saliente") s.push(r);
     }
 
-    return { entrantesRows, salientesRows };
-  }, [sortedRows]);
+    return { entrantesRows: e, salientesRows: s };
+  }, [filteredRows]);
 
-  const stamp = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const resetKey = `${clienteFilter}|${tipificacionFilter}|${fechaDesde}|${fechaHasta}`;
+  const stamp = new Date().toISOString().slice(0, 10);
 
-  const downloadEntrantes = () =>
-    downloadCsv(`detalle-entrantes-${stamp}.csv`, columns, entrantesRows);
-
-  const downloadSalientes = () =>
-    downloadCsv(`detalle-salientes-${stamp}.csv`, columns, salientesRows);
-
-  const downloadAll = () =>
-    downloadCsv(`detalle-registros-${stamp}.csv`, columns, sortedRows);
-
-  if (loading) return <p>Loading details...</p>;
+  if (loading) return <p>Loading…</p>;
   if (error) return <p>{String(error)}</p>;
 
   return (
     <div>
-      <div className="panel-header" style={{ marginBottom: "1rem" }}>
-        <span className="panel-title">
-          Detalle de Registros (Entrantes / Salientes)
-        </span>
-        <button className="btn-white" onClick={downloadAll}>
-          Descargar CSV (Todos)
-        </button>
-      </div>
-
       <TableBlock
         title={`Entrantes (${entrantesRows.length})`}
         rows={entrantesRows}
         columns={columns}
-        onDownloadCsv={downloadEntrantes}
+        resetKey={resetKey}
+        clienteFilter={clienteFilter}
+        setClienteFilter={setClienteFilter}
+        tipificacionFilter={tipificacionFilter}
+        setTipificacionFilter={setTipificacionFilter}
+        tipificacionOptions={tipificacionOptions}
+        fechaDesde={fechaDesde}
+        setFechaDesde={setFechaDesde}
+        fechaHasta={fechaHasta}
+        setFechaHasta={setFechaHasta}
+        onDownloadCsv={() =>
+          downloadCsv(`detalle-entrantes-${stamp}.csv`, columns, entrantesRows)
+        }
       />
 
       <TableBlock
         title={`Salientes (${salientesRows.length})`}
         rows={salientesRows}
         columns={columns}
-        onDownloadCsv={downloadSalientes}
+        resetKey={resetKey}
+        clienteFilter={clienteFilter}
+        setClienteFilter={setClienteFilter}
+        tipificacionFilter={tipificacionFilter}
+        setTipificacionFilter={setTipificacionFilter}
+        tipificacionOptions={tipificacionOptions}
+        fechaDesde={fechaDesde}
+        setFechaDesde={setFechaDesde}
+        fechaHasta={fechaHasta}
+        setFechaHasta={setFechaHasta}
+        onDownloadCsv={() =>
+          downloadCsv(`detalle-salientes-${stamp}.csv`, columns, salientesRows)
+        }
       />
     </div>
   );
