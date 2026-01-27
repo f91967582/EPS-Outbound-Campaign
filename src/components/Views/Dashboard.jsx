@@ -1,9 +1,9 @@
 import { useState } from "react";
-import TabsNav from "./Tabs/TabsNav";
-import TabPanel from "./Tabs/TabPanel";
-import ContactList from "./Views/ContactList";
-import { useMetrics } from "../hooks/useMetrics";
-import MainView from "./Views/MainView";
+import TabsNav from "../Tabs/TabsNav";
+import TabPanel from "../Tabs/TabPanel";
+import ContactList from "./ContactList";
+import { useMetrics } from "../../hooks/useMetrics";
+import MainView from "./MainView";
 
 function Dashboard() {
   const [tab, setTab] = useState("mainview");
