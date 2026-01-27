@@ -9,6 +9,9 @@ export default function ContactList({ data, loading, error }) {
   const [contactIdFilter, setContactIdFilter] = useState("");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
+  const [tipificacionFilter, setTipificacionFilter] = useState("");
+  const [llamadaFilter, setLlamadaFilter] = useState("");
+
 
 
   const rows = useMemo(() => {
@@ -16,6 +19,24 @@ export default function ContactList({ data, loading, error }) {
       (a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro)
     );
   }, [data]);
+
+  const tipificacionOptions = useMemo(() => {
+    const set = new Set();
+    for (const r of rows) {
+      const v = r.tipificacion ?? r.Tipificacion;
+      if (v) set.add(String(v).trim());
+    }
+    return Array.from(set).sort();
+  }, [rows]);
+
+  const llamadaOptions = useMemo(() => {
+    const set = new Set();
+    for (const r of rows) {
+      if (r.llamadas) set.add(String(r.llamadas).toLowerCase());
+    }
+    return Array.from(set).sort();
+  }, [rows]);
+
 
   const fromDate = fechaDesde ? new Date(fechaDesde) : null;
   const toDate = fechaHasta
@@ -29,18 +50,33 @@ export default function ContactList({ data, loading, error }) {
       !telefonoFilter &&
       !contactIdFilter &&
       !fechaDesde &&
-      !fechaHasta
+      !fechaHasta &&
+      !tipificacionFilter &&
+      !llamadaFilter
     ) {
       return rows;
     }
+
 
     const qCliente = clienteFilter.toLowerCase().trim();
     const qAsesor = asesorFilter.toLowerCase().trim();
     const qTelefono = telefonoFilter.toLowerCase().trim();
     const qContactId = contactIdFilter.toLowerCase().trim();
 
+
     return rows.filter((r) => {
-          const rowDate = new Date(r.fechaRegistro);
+
+      const tipValue = (r.tipificacion ?? r.Tipificacion) ?? "";
+      if (tipificacionFilter && tipValue !== tipificacionFilter) {
+        return false;
+      }
+
+      const llamadaValue = String(r.llamadas ?? "").toLowerCase();
+      if (llamadaFilter && llamadaValue !== llamadaFilter) {
+        return false;
+      }
+
+      const rowDate = new Date(r.fechaRegistro);
 
       if (qCliente && !r.nombreCliente?.toLowerCase().includes(qCliente)) {
         return false;
@@ -69,7 +105,7 @@ export default function ContactList({ data, loading, error }) {
 
       return true;
     });
-}, [
+ }, [
   rows,
   clienteFilter,
   asesorFilter,
@@ -77,7 +113,10 @@ export default function ContactList({ data, loading, error }) {
   contactIdFilter,
   fechaDesde,
   fechaHasta,
+  tipificacionFilter,
+  llamadaFilter,
 ]);
+
 
 
   const columns = [
@@ -94,17 +133,17 @@ export default function ContactList({ data, loading, error }) {
       },
     },
 
-   {
-  label: "Fecha",
-  key: "fechaRegistro",
-  filter: {
-    type: "date-range",
-    from: fechaDesde,
-    to: fechaHasta,
-    onChangeFrom: setFechaDesde,
-    onChangeTo: setFechaHasta,
-  },
-},
+    {
+      label: "Fecha",
+      key: "fechaRegistro",
+      filter: {
+        type: "date-range",
+        from: fechaDesde,
+        to: fechaHasta,
+        onChangeFrom: setFechaDesde,
+        onChangeTo: setFechaHasta,
+      },
+    },
 
 
     {
@@ -118,7 +157,18 @@ export default function ContactList({ data, loading, error }) {
       },
     },
 
-    { label: "Tipificación", key: "tipificacion" },
+    {
+  label: "Tipificación",
+  key: "tipificacion",
+  filter: {
+    type: "select",
+    value: tipificacionFilter,
+    onChange: setTipificacionFilter,
+    options: tipificacionOptions,
+    placeholder: "Todas",
+  },
+},
+
 
     {
       label: "Asesor",
@@ -131,7 +181,18 @@ export default function ContactList({ data, loading, error }) {
       },
     },
 
-    { label: "Llamada", key: "llamadas" },
+    {
+  label: "Llamada",
+  key: "llamadas",
+  filter: {
+    type: "select",
+    value: llamadaFilter,
+    onChange: setLlamadaFilter,
+    options: llamadaOptions,
+    placeholder: "Todas",
+  },
+},
+
     {
       label: "Contact ID",
       key: "contactId",

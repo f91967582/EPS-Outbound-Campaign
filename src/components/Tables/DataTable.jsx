@@ -50,6 +50,21 @@ export default function DataTable({ title, rows, columns, onDownloadCsv }) {
                                             />
                                         </div>
                                     )}
+                                    {c.filter?.type === "select" && (
+  <select
+    value={c.filter.value}
+    onChange={(e) => c.filter.onChange(e.target.value)}
+    style={{ width: "100%", padding: 4 }}
+  >
+    <option value="">{c.filter.placeholder ?? "Todas"}</option>
+    {c.filter.options.map((opt) => (
+      <option key={opt} value={opt}>
+        {opt}
+      </option>
+    ))}
+  </select>
+)}
+
 
                                 </th>
                             ))}
