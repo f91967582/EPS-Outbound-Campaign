@@ -5,24 +5,43 @@ import { downloadCsv } from "../../utils/csv";
 export default function ContactList({ data, loading, error }) {
   const [clienteFilter, setClienteFilter] = useState("");
   const [asesorFilter, setAsesorFilter] = useState("");
-  
+  const [telefonoFilter, setTelefonoFilter] = useState("");
+  const [contactIdFilter, setContactIdFilter] = useState("");
+  const [fechaDesde, setFechaDesde] = useState("");
+  const [fechaHasta, setFechaHasta] = useState("");
 
-  // 1) rows MUST be defined before filteredRows
+
   const rows = useMemo(() => {
     return (data?.data ?? []).slice().sort(
       (a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro)
     );
   }, [data]);
 
-  // 2) filteredRows can safely use rows
+  const fromDate = fechaDesde ? new Date(fechaDesde) : null;
+  const toDate = fechaHasta
+    ? new Date(fechaHasta + "T23:59:59")
+    : null;
+
   const filteredRows = useMemo(() => {
-    // if both empty, return all
-    if (!clienteFilter && !asesorFilter) return rows;
+    if (
+      !clienteFilter &&
+      !asesorFilter &&
+      !telefonoFilter &&
+      !contactIdFilter &&
+      !fechaDesde &&
+      !fechaHasta
+    ) {
+      return rows;
+    }
 
     const qCliente = clienteFilter.toLowerCase().trim();
     const qAsesor = asesorFilter.toLowerCase().trim();
+    const qTelefono = telefonoFilter.toLowerCase().trim();
+    const qContactId = contactIdFilter.toLowerCase().trim();
 
     return rows.filter((r) => {
+          const rowDate = new Date(r.fechaRegistro);
+
       if (qCliente && !r.nombreCliente?.toLowerCase().includes(qCliente)) {
         return false;
       }
@@ -31,14 +50,62 @@ export default function ContactList({ data, loading, error }) {
         return false;
       }
 
+      if (qTelefono && !r.telefonoCliente?.toLowerCase().includes(qTelefono)) {
+        return false;
+      }
+
+      if (qContactId && !String(r.contactId ?? "").toLowerCase().includes(qContactId)) {
+        return false;
+      }
+
+      if (fromDate && rowDate < fromDate) {
+        return false;
+      }
+
+      if (toDate && rowDate > toDate) {
+        return false;
+      }
+
+
       return true;
     });
-  }, [rows, clienteFilter, asesorFilter]);
+}, [
+  rows,
+  clienteFilter,
+  asesorFilter,
+  telefonoFilter,
+  contactIdFilter,
+  fechaDesde,
+  fechaHasta,
+]);
+
 
   const columns = [
     { label: "#", key: "__index" },
-    { label: "Teléfono", key: "telefonoCliente" },
-    { label: "Fecha", key: "fechaRegistro" },
+
+    {
+      label: "Teléfono",
+      key: "telefonoCliente",
+      filter: {
+        type: "text",
+        value: telefonoFilter,
+        onChange: setTelefonoFilter,
+        placeholder: "Buscar teléfono...",
+      },
+    },
+
+   {
+  label: "Fecha",
+  key: "fechaRegistro",
+  filter: {
+    type: "date-range",
+    from: fechaDesde,
+    to: fechaHasta,
+    onChangeFrom: setFechaDesde,
+    onChangeTo: setFechaHasta,
+  },
+},
+
 
     {
       label: "Cliente",
@@ -65,7 +132,17 @@ export default function ContactList({ data, loading, error }) {
     },
 
     { label: "Llamada", key: "llamadas" },
-    { label: "Contact ID", key: "contactId" },
+    {
+      label: "Contact ID",
+      key: "contactId",
+      filter: {
+        type: "text",
+        value: contactIdFilter,
+        onChange: setContactIdFilter,
+        placeholder: "Buscar contact ID...",
+      },
+    },
+
   ];
 
   const stamp = new Date().toISOString().slice(0, 10);
@@ -79,11 +156,7 @@ export default function ContactList({ data, loading, error }) {
       rows={filteredRows}
       columns={columns}
       onDownloadCsv={() =>
-        downloadCsv(
-          `detalle-llamadas-${stamp}.csv`,
-          columns,
-          filteredRows
-        )
+        downloadCsv(`detalle-llamadas-${stamp}.csv`, columns, filteredRows)
       }
     />
   );
