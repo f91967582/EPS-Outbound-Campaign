@@ -14,6 +14,13 @@ export default function TabsNav({ active, onChange }) {
         Listado de Contactos
       </button>
 
+      <button
+        className={`tab-btn ${active === "outboundcampaign" ? "active" : ""}`}
+        onClick={() => onChange("outboundcampaign")}
+      >
+        Campaña Outbound
+      </button>
+
     </div>
   );
 }
