@@ -4,7 +4,7 @@ import TabPanel from "../Tabs/TabPanel";
 import ContactList from "./ContactList";
 import { useMetrics } from "../../hooks/useMetrics";
 import MainView from "./MainView";
-import OutboundCampaign from "./OutboundCampaign";
+import OutboundCampaign from "../Campaigns/OutboundCampaign";
 
 function Dashboard() {
   const [tab, setTab] = useState("mainview");
