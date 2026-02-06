@@ -1,7 +1,7 @@
 export default function TabsNav({ active, onChange }) {
   return (
     <div className="tabs-nav">
-            <button
+      <button
         className={`tab-btn ${active === "mainview" ? "active" : ""}`}
         onClick={() => onChange("mainview")}
       >
@@ -19,6 +19,13 @@ export default function TabsNav({ active, onChange }) {
         onClick={() => onChange("outboundcampaign")}
       >
         Campaña Outbound
+      </button>
+
+      <button
+        className={`tab-btn ${active === "emailcampaign" ? "active" : ""}`}
+        onClick={() => onChange("emailcampaign")}
+      >
+        Campaña Email
       </button>
 
     </div>

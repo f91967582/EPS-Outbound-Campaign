@@ -1,4 +1,4 @@
-export async function getPresignedUploadUrl(file) {
+export async function getPresignedUploadUrl(file, metadata) {
   const res = await fetch(import.meta.env.VITE_UPLOAD_API_URL, {
     method: "POST",
     headers: {
@@ -6,6 +6,7 @@ export async function getPresignedUploadUrl(file) {
     },
     body: JSON.stringify({
       filename: file.name,
+      metadata,
     }),
   });
 

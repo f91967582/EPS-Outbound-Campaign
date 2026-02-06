@@ -6,8 +6,7 @@ import { getPresignedUploadUrl } from "../../utils/getPresignedUploadUrl";
 import uploadFileToS3 from "../../utils/uploadFileToS3";
 import Button from "@mui/material/Button";
 
-
-export default function CampaignSection({ title }) {
+export default function CampaignSection({ title, metadata }) {
     const [file, setFile] = useState(null);
     const [rows, setRows] = useState([]);
     const [s3Key, setS3Key] = useState("");
@@ -20,7 +19,7 @@ export default function CampaignSection({ title }) {
             setUploading(true);
 
             // Upload to S3
-            const { uploadUrl, key } = await getPresignedUploadUrl(file);
+            const { uploadUrl, key } = await getPresignedUploadUrl(file, metadata);
             await uploadFileToS3(uploadUrl, file);
             setS3Key(key);
 
