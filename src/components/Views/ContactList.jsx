@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import DataTable from "../Tables/DataTable";
-import { downloadCsv } from "../../utils/csv";
+import { downloadCsv } from "../../utils/downloadCsv";
 
 export default function ContactList({ data, loading, error }) {
   const [clienteFilter, setClienteFilter] = useState("");
@@ -11,8 +11,6 @@ export default function ContactList({ data, loading, error }) {
   const [fechaHasta, setFechaHasta] = useState("");
   const [tipificacionFilter, setTipificacionFilter] = useState("");
   const [llamadaFilter, setLlamadaFilter] = useState("");
-
-
 
   const rows = useMemo(() => {
     return (data?.data ?? []).slice().sort(
