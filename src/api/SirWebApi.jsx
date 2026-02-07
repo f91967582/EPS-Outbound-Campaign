@@ -1,8 +1,7 @@
-// src/api/apiCall.js
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_SIRWEB_BASE_URL, // e.g. https://xxxx.execute-api.us-east-1.amazonaws.com/Dev
+  baseURL: import.meta.env.VITE_API_SIRWEB_BASE_URL, 
   headers: { "Content-Type": "application/json" },
 });
 

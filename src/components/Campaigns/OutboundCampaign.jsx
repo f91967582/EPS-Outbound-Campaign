@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FormControl, InputLabel, Select, MenuItem, Box } from "@mui/material";
 import { useFlows } from "../../hooks/useConnectFlowsList";
 
-import CampaignSection from "./CampaignSection";
+import OutboundSection from "./OutboundSection";
 
 export default function OutboundCampaign() {
   // store selected flowId
@@ -41,10 +41,10 @@ export default function OutboundCampaign() {
         </FormControl>
       </Box>
 
-      <CampaignSection
+      <OutboundSection
         title="Clientes a llamar"
         metadata={metadata}
       />
     </div>
   );
-}
+} 
