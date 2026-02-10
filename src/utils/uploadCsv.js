@@ -73,19 +73,16 @@ function normalize(value) {
 }
 
 export const OUTBOUND_HEADER_MAP = {
-  cedula: "cedula",
-  nombre: "nombreCliente",
-  telefono: "telefonoCliente",
-  flujodecontacto: "direccionamiento",
+  documento: "documento",
+  tipo: "tipo"
 };
 
 export const EMAIL_HEADER_MAP = {
-  correo: "correo",
-  action: "action",
-  nudocumento: "nuDocumento",
-  tpdocumento: "tpDocumento",
+  documento: "documento",
+  tipo: "tipo"
 };
 
 export const SMS_HEADER_MAP = {
-  telefono: "telefono"
-}
+  documento: "documento",
+  tipo: "tipo"
+};

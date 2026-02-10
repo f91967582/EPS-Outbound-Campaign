@@ -51,6 +51,7 @@ export default function OutboundSection({ title, metadata }) {
       setParsing(true);
       const parsed = await uploadCsv(selected, OUTBOUND_HEADER_MAP);
       setRows(Array.isArray(parsed) ? parsed : []);
+      
     } catch (err) {
       console.error(err);
       setRows([]);
@@ -58,6 +59,7 @@ export default function OutboundSection({ title, metadata }) {
     } finally {
       setParsing(false);
     }
+
   };
 
 
