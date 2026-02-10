@@ -28,6 +28,13 @@ export default function TabsNav({ active, onChange }) {
         Campaña Email
       </button>
 
+            <button
+        className={`tab-btn ${active === "smscampaign" ? "active" : ""}`}
+        onClick={() => onChange("smscampaign")}
+      >
+        Campaña SMS
+      </button>
+
     </div>
   );
 }

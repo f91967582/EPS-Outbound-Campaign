@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import CsvPreviewTable from "../Tables/CsvPreviewTable";
-import { uploadCsv } from "../../utils/uploadCsv";
-import { getPresignedUploadUrl } from "../../utils/getPresignedUploadUrl";
+import { uploadCsv, OUTBOUND_HEADER_MAP } from "../../utils/uploadCsv";
+import { getPresignedUploadUrlOutbound } from "../../api/getPresignedUploadUrlOutbound";
 import uploadFileToS3 from "../../utils/uploadFileToS3";
 
 // MUI
@@ -49,7 +49,7 @@ export default function OutboundSection({ title, metadata }) {
 
     try {
       setParsing(true);
-      const parsed = await uploadCsv(selected); // local parse only
+      const parsed = await uploadCsv(selected, OUTBOUND_HEADER_MAP);
       setRows(Array.isArray(parsed) ? parsed : []);
     } catch (err) {
       console.error(err);
@@ -60,6 +60,8 @@ export default function OutboundSection({ title, metadata }) {
     }
   };
 
+
+
   const handleConfirmUpload = async () => {
     if (!file) return;
 
@@ -67,7 +69,7 @@ export default function OutboundSection({ title, metadata }) {
       setError("");
       setUploading(true);
 
-      const { uploadUrl, key } = await getPresignedUploadUrl(file, metadata);
+      const { uploadUrl, key } = await getPresignedUploadUrlOutbound(file, metadata);
       await uploadFileToS3(uploadUrl, file);
       setS3Key(key);
     } catch (err) {

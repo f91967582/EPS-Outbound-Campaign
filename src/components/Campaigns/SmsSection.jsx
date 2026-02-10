@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
 import CsvPreviewTable from "../Tables/CsvPreviewTable";
-import { getPresignedUploadUrlEmail } from "../../api/getPresignedUploadUrlEmail"
+import { getPresignedUploadUrlSms } from "../../api/getPresignedUploadUrlSms"
 import uploadFileToS3 from "../../utils/uploadFileToS3";
-import { uploadCsv, EMAIL_HEADER_MAP } from "../../utils/uploadCsv";
+import { uploadCsv, SMS_HEADER_MAP } from "../../utils/uploadCsv";
 
 // MUI
 import {
@@ -49,7 +49,7 @@ export default function EmailSection({ title }) {
 
     try {
       setParsing(true);
-      const parsed = await uploadCsv(selected, EMAIL_HEADER_MAP);
+      const parsed = await uploadCsv(selected, SMS_HEADER_MAP);
       setRows(Array.isArray(parsed) ? parsed : []);
     } catch (err) {
       console.error(err);
@@ -67,7 +67,7 @@ export default function EmailSection({ title }) {
       setError("");
       setUploading(true);
 
-      const { uploadUrl, key } = await getPresignedUploadUrlEmail(file);
+      const { uploadUrl, key } = await getPresignedUploadUrlSms(file);
       await uploadFileToS3(uploadUrl, file);
       setS3Key(key);
     } catch (err) {

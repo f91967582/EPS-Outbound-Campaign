@@ -1,12 +1,11 @@
-export async function getPresignedUploadUrl(file, metadata) {
-  const res = await fetch(import.meta.env.VITE_UPLOAD_API_URL, {
+export async function getPresignedUploadUrlSms(file) {
+  const res = await fetch(import.meta.env.VITE_UPLOAD_API_URL_SMS, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
       filename: file.name,
-      metadata,
     }),
   });
 

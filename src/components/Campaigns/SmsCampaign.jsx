@@ -1,7 +1,7 @@
-import EmailSection from "./EmailSection";
+import EmailSection from "./SmsSection";
 import { useSirWeb } from "../../hooks/useApiSirWeb";
 
-function EmailCampaign() {
+function SmsCampaign() {
 
   const {data, loading, error} = useSirWeb();
   console.log("DATA:", data)
@@ -17,4 +17,4 @@ function EmailCampaign() {
   )
 }
 
-export default EmailCampaign;
+export default SmsCampaign;
