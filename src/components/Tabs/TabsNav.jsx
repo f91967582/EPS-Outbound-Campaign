@@ -15,25 +15,13 @@ export default function TabsNav({ active, onChange }) {
       </button>
 
       <button
-        className={`tab-btn ${active === "outboundcampaign" ? "active" : ""}`}
-        onClick={() => onChange("outboundcampaign")}
+        className={`tab-btn ${active === "startcampaign" ? "active" : ""}`}
+        onClick={() => onChange("startcampaign")}
       >
-        Campaña Outbound
+        Inicar Campaña
       </button>
 
-      <button
-        className={`tab-btn ${active === "emailcampaign" ? "active" : ""}`}
-        onClick={() => onChange("emailcampaign")}
-      >
-        Campaña Email
-      </button>
 
-            <button
-        className={`tab-btn ${active === "smscampaign" ? "active" : ""}`}
-        onClick={() => onChange("smscampaign")}
-      >
-        Campaña SMS
-      </button>
 
     </div>
   );
