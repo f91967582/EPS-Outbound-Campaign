@@ -43,12 +43,19 @@ export default function OutboundCampaign() {
 
   const [campaignStatus, setCampaignStatus] = useState("CREATED");
   const [campaignId, setCampaignId] = useState(null);
-  
+
+  // Start campaign button state
+  const [starting, setStarting] = useState(false);
+  const [started, setStarted] = useState(false);
 
   const resetAll = () => {
     setFile(null);
     setRows([]);
     setS3Key("");
+    setCampaignId(null);
+    setCampaignStatus("CREATED");
+    setStarting(false);
+    setStarted(false);
     setError("");
     if (inputRef.current) inputRef.current.value = "";
   };
@@ -61,7 +68,14 @@ export default function OutboundCampaign() {
 
     setError("");
     setFile(selected);
+
+    // New file => reset upload/start state
+    setRows([]);
     setS3Key("");
+    setCampaignId(null);
+    setCampaignStatus("CREATED");
+    setStarting(false);
+    setStarted(false);
 
     try {
       setParsing(true);
@@ -104,12 +118,13 @@ export default function OutboundCampaign() {
         campaignId: newCampaignId,
       };
 
-      const { uploadUrl, key } =
-        await getPresignedUploadUrlOutbound(file, metadata);
+      const { uploadUrl, key } = await getPresignedUploadUrlOutbound(
+        file,
+        metadata
+      );
 
       // 3️⃣ Upload file
       await uploadFileToS3(uploadUrl, file);
-
       setS3Key(key);
 
       // 4️⃣ Save bucket + s3Key into DynamoDB
@@ -117,12 +132,34 @@ export default function OutboundCampaign() {
         bucket: "csvfile-upload-react-dashboard",
         s3Key: key,
       });
-
     } catch (err) {
       console.error(err);
       setError("Error subiendo archivo.");
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleStart = async () => {
+    if (!campaignId || !s3Key) return;
+
+    try {
+      setError("");
+      setStarting(true);
+
+      // Change status to RUNNING
+      await updateCampaignStatus(campaignId, { status: "RUNNING" });
+      setCampaignStatus("RUNNING");
+
+      // Trigger start Lambda
+      await startVoiceCampaign(campaignId);
+
+      setStarted(true);
+    } catch (err) {
+      console.error(err);
+      setError("Error iniciando campaña.");
+    } finally {
+      setStarting(false);
     }
   };
 
@@ -133,6 +170,8 @@ export default function OutboundCampaign() {
     !uploading &&
     !parsing &&
     !s3Key;
+
+  const canStart = Boolean(campaignId && s3Key) && !starting && !started;
 
   return (
     <Card sx={{ borderRadius: 3, p: 2 }}>
@@ -150,7 +189,6 @@ export default function OutboundCampaign() {
 
       <CardContent>
         <Stack spacing={3}>
-
           <TextField
             label="Título de campaña"
             size="small"
@@ -182,6 +220,7 @@ export default function OutboundCampaign() {
             style={{ display: "none" }}
           />
 
+          {/* Buttons row (Start next to Confirm & Upload) */}
           <Stack direction="row" spacing={2}>
             <Button
               variant="outlined"
@@ -191,7 +230,7 @@ export default function OutboundCampaign() {
               Seleccionar CSV
             </Button>
 
-            <Button variant="text" onClick={resetAll}>
+            <Button variant="text" onClick={resetAll} disabled={uploading || parsing || starting}>
               Limpiar
             </Button>
 
@@ -202,11 +241,19 @@ export default function OutboundCampaign() {
               color="success"
               disabled={!isReady}
               onClick={handleUpload}
-              startIcon={
-                uploading ? <CircularProgress size={18} /> : null
-              }
+              startIcon={uploading ? <CircularProgress size={18} /> : null}
             >
               {uploading ? "Subiendo..." : "Confirmar y subir"}
+            </Button>
+
+            <Button
+              variant="contained"
+              color={started ? "success" : "primary"}
+              disabled={!canStart}
+              onClick={handleStart}
+              startIcon={starting ? <CircularProgress size={18} /> : null}
+            >
+              {starting ? "Iniciando..." : started ? "✅ Iniciada" : "▶ Iniciar Campaña"}
             </Button>
           </Stack>
 
@@ -221,9 +268,7 @@ export default function OutboundCampaign() {
           {rows.length > 0 && (
             <>
               <Divider />
-              <Typography variant="subtitle2">
-                Vista previa
-              </Typography>
+              <Typography variant="subtitle2">Vista previa</Typography>
               <CsvPreviewTable rows={rows} />
             </>
           )}
@@ -234,38 +279,12 @@ export default function OutboundCampaign() {
               <Typography variant="caption" display="block">
                 {s3Key}
               </Typography>
+              <Typography variant="caption" display="block">
+                Status: {campaignStatus}
+              </Typography>
             </Alert>
           )}
         </Stack>
-
-        {campaignId && s3Key && (
-          <Box mt={3}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={async () => {
-                try {
-                  // 5️⃣ Change status to RUNNING
-                  await updateCampaignStatus(campaignId, {
-                    status: "RUNNING",
-                  });
-
-                  setCampaignStatus("RUNNING");
-
-                  // 6️⃣ Trigger start Lambda
-                  await startVoiceCampaign(campaignId);
-
-                } catch (err) {
-                  console.error(err);
-                  setError("Error iniciando campaña.");
-                }
-              }}
-            >
-              ▶ Start Calling
-            </Button>
-          </Box>
-        )}
-
       </CardContent>
     </Card>
   );
