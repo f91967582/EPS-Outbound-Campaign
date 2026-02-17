@@ -21,6 +21,13 @@ export default function TabsNav({ active, onChange }) {
         Inicar Campaña
       </button>
 
+      <button
+        className={`tab-btn ${active === "campaignlist" ? "active" : ""}`}
+        onClick={() => onChange("campaignlist")}
+      >
+        Lista de campañas
+      </button>
+
 
 
     </div>
