@@ -50,7 +50,7 @@ export default function CampaignsView() {
               >
                 <div style={{ fontWeight: 700 }}>{c.title || "(no title)"}</div>
                 <div style={{ fontSize: 12, color: "#555" }}>
-                  {c.status || "—"} • {c.createdAt ? new Date(c.createdAt).toLocaleString() : "—"}
+                  Iniciada: {c.createdAt ? new Date(c.createdAt).toLocaleString() : "—"}
                 </div>
               </button>
             ))}
@@ -67,7 +67,6 @@ export default function CampaignsView() {
             <>
               <div style={{ padding: 10, border: "1px solid #eee", borderRadius: 8 }}>
                 <div><b>Title:</b> {campaign.title}</div>
-                <div><b>Status:</b> {campaign.status}</div>
                 <div><b>CampaignId:</b> {campaign.campaignId}</div>
                 <div><b>FlowId:</b> {campaign.flowId}</div>
                 <div><b>Created:</b> {campaign.createdAt}</div>
