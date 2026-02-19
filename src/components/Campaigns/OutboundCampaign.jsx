@@ -48,6 +48,11 @@ export default function OutboundCampaign() {
   const [starting, setStarting] = useState(false);
   const [started, setStarted] = useState(false);
 
+  // Date starting campaign
+  const [startDate, setStartDate] = useState(""); // YYYY-MM-DD
+  const [startTime, setStartTime] = useState(""); // HH:mm
+  const timezone = "America/Santo_Domingo";
+
   const resetAll = () => {
     setFile(null);
     setRows([]);
@@ -143,25 +148,40 @@ export default function OutboundCampaign() {
   const handleStart = async () => {
     if (!campaignId || !s3Key) return;
 
+    // Require schedule inputs
+    if (!startDate || !startTime) {
+      setError("Selecciona fecha, hora y zona horaria para programar el inicio.");
+      return;
+    }
+
     try {
       setError("");
       setStarting(true);
 
-      // Change status to RUNNING
-      await updateCampaignStatus(campaignId, { status: "RUNNING" });
-      setCampaignStatus("RUNNING");
+      // Combine into a "local wall clock" timestamp string.
+      // Backend will interpret this using `timezone`.
+      // Example: "2026-02-25T09:30:00"
+      const startAt = `${startDate}T${startTime}:00`;
 
-      // Trigger start Lambda
-      await startVoiceCampaign(campaignId);
+      // Save status as SCHEDULED (recommended) instead of RUNNING right away
+      await updateCampaignStatus(campaignId, { status: "CREATED", startAt, timezone });
+      setCampaignStatus("CREATED");
+
+      // Call Proxy Lambda (EventBridge Scheduler CreateSchedule)
+      await startVoiceCampaign({
+        campaignId,
+        startAt,
+      });
 
       setStarted(true);
     } catch (err) {
       console.error(err);
-      setError("Error iniciando campaña.");
+      setError("Error programando la campaña.");
     } finally {
       setStarting(false);
     }
   };
+
 
   const isReady =
     campaignTitle.trim() !== "" &&
@@ -171,7 +191,12 @@ export default function OutboundCampaign() {
     !parsing &&
     !s3Key;
 
-  const canStart = Boolean(campaignId && s3Key) && !starting && !started;
+  const canStart =
+    Boolean(campaignId && s3Key) &&
+    Boolean(startDate && startTime && timezone) &&
+    !starting &&
+    !started;
+
 
   return (
     <Card sx={{ borderRadius: 3, p: 2 }}>
@@ -222,6 +247,32 @@ export default function OutboundCampaign() {
 
           {/* Buttons row (Start next to Confirm & Upload) */}
           <Stack direction="row" spacing={2}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              <TextField
+                label="Fecha de inicio"
+                type="date"
+                size="small"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+              />
+
+              <TextField
+                label="Hora de inicio"
+                type="time"
+                size="small"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+              />
+              <Typography variant="caption" color="text.secondary">
+                Zona horaria: America/Santo_Domingo
+              </Typography>
+
+            </Stack>
+
             <Button
               variant="outlined"
               onClick={handlePickFile}

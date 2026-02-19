@@ -1,19 +1,15 @@
-export async function startVoiceCampaign(campaignId) {
+export async function startVoiceCampaign({ campaignId, startAt, timezone = "America/Santo_Domingo" }) {
   const API_URL = import.meta.env.VITE_API_BASE_URL_START_VOICE;
 
-  const response = await fetch(
-    `${API_URL}/voice/start`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ campaignId }),
-    }
-  );
+  const response = await fetch(`${API_URL}/voice/start`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ campaignId, startAt, timezone }),
+  });
 
   if (!response.ok) {
-    throw new Error("Failed to start campaign");
+    const msg = await response.text().catch(() => "");
+    throw new Error(msg || "Failed to schedule campaign");
   }
 
   return response.json();

@@ -1,18 +1,30 @@
-export async function updateCampaignStatus(campaignId, data) {
+export async function updateCampaignStatus(campaignId, payload) {
   const response = await fetch(
-    `https://qm97ttj6qk.execute-api.us-east-1.amazonaws.com/campaign/${campaignId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  }
+    `https://qm97ttj6qk.execute-api.us-east-1.amazonaws.com/campaign/${campaignId}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }
   );
 
-  if (!response.ok) {
-    throw new Error("Failed to update campaign");
+  const text = await response.text();
+
+  let body;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch {
+    body = { raw: text };
   }
 
-  return response.json();
-}
+  if (!response.ok) {
+    throw new Error(
+      `Failed to update campaign (${response.status}): ${
+        body?.message || body?.error || body?.raw || text || "Unknown error"
+      }`
+    );
+  }
 
+  // If your API returns JSON, prefer the already-parsed body:
+  return body;
+}
