@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   Alert,
   Box,
@@ -16,6 +16,9 @@ import {
   Stack,
   TextField,
   Typography,
+  Switch,
+  FormControlLabel,
+
 } from "@mui/material";
 
 import { useFlows } from "../../hooks/useConnectFlowsList";
@@ -52,6 +55,8 @@ export default function OutboundCampaign() {
   const [startDate, setStartDate] = useState(""); // YYYY-MM-DD
   const [startTime, setStartTime] = useState(""); // HH:mm
   const timezone = "America/Santo_Domingo";
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+
 
   const resetAll = () => {
     setFile(null);
@@ -62,8 +67,13 @@ export default function OutboundCampaign() {
     setStarting(false);
     setStarted(false);
     setError("");
+    setScheduleEnabled(false);
+    setStartDate("");
+    setStartTime("");
+
     if (inputRef.current) inputRef.current.value = "";
   };
+  useEffect(() => { setStarted(false); }, [scheduleEnabled, startDate, startTime]);
 
   const handlePickFile = () => inputRef.current?.click();
 
@@ -148,9 +158,11 @@ export default function OutboundCampaign() {
   const handleStart = async () => {
     if (!campaignId || !s3Key) return;
 
-    // Require schedule inputs
-    if (!startDate || !startTime) {
-      setError("Selecciona fecha, hora y zona horaria para programar el inicio.");
+    const hasSchedule = scheduleEnabled && Boolean(startDate && startTime);
+
+    // If user turned on scheduling, force them to pick date + time
+    if (scheduleEnabled && !hasSchedule) {
+      setError("Selecciona fecha y hora para programar el inicio, o desactiva 'Programar inicio'.");
       return;
     }
 
@@ -158,29 +170,28 @@ export default function OutboundCampaign() {
       setError("");
       setStarting(true);
 
-      // Combine into a "local wall clock" timestamp string.
-      // Backend will interpret this using `timezone`.
-      // Example: "2026-02-25T09:30:00"
-      const startAt = `${startDate}T${startTime}:00`;
+      const startAt = hasSchedule ? `${startDate}T${startTime}:00` : null;
 
-      // Save status as SCHEDULED (recommended) instead of RUNNING right away
-      await updateCampaignStatus(campaignId, { status: "CREATED", startAt, timezone });
-      setCampaignStatus("CREATED");
+      await updateCampaignStatus(campaignId, {
+        status: "CREATED",
+        ...(hasSchedule ? { startAt, timezone } : { startAt: null, timezone: null }),
+      });
 
-      // Call Proxy Lambda (EventBridge Scheduler CreateSchedule)
       await startVoiceCampaign({
         campaignId,
-        startAt,
+        ...(hasSchedule ? { startAt, timezone } : {}),
       });
 
       setStarted(true);
     } catch (err) {
       console.error(err);
-      setError("Error programando la campaña.");
+      setError("Error iniciando/programando la campaña.");
     } finally {
       setStarting(false);
     }
   };
+
+
 
 
   const isReady =
@@ -193,9 +204,9 @@ export default function OutboundCampaign() {
 
   const canStart =
     Boolean(campaignId && s3Key) &&
-    Boolean(startDate && startTime && timezone) &&
     !starting &&
     !started;
+
 
 
   return (
@@ -247,31 +258,53 @@ export default function OutboundCampaign() {
 
           {/* Buttons row (Start next to Confirm & Upload) */}
           <Stack direction="row" spacing={2}>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <TextField
-                label="Fecha de inicio"
-                type="date"
-                size="small"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center">
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={scheduleEnabled}
+                    onChange={(e) => {
+                      const on = e.target.checked;
+                      setScheduleEnabled(on);
+                      if (!on) {
+                        setStartDate("");
+                        setStartTime("");
+                      }
+                    }}
+                  />
+                }
+                label="Programar inicio"
               />
 
-              <TextField
-                label="Hora de inicio"
-                type="time"
-                size="small"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-              />
-              <Typography variant="caption" color="text.secondary">
-                Zona horaria: America/Santo_Domingo
-              </Typography>
+              {scheduleEnabled && (
+                <>
+                  <TextField
+                    label="Fecha de inicio"
+                    type="date"
+                    size="small"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
 
+                  <TextField
+                    label="Hora de inicio"
+                    type="time"
+                    size="small"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
+
+                  <Typography variant="caption" color="text.secondary">
+                    Zona horaria: {timezone}
+                  </Typography>
+                </>
+              )}
             </Stack>
+
 
             <Button
               variant="outlined"

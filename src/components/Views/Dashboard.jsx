@@ -40,8 +40,6 @@ function Dashboard() {
         <CampaignList />
       </TabPanel>
 
-
-
     </div>
   );
 }

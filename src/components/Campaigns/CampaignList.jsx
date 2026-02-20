@@ -70,6 +70,8 @@ export default function CampaignsView() {
                 <div><b>CampaignId:</b> {campaign.campaignId}</div>
                 <div><b>FlowId:</b> {campaign.flowId}</div>
                 <div><b>Created:</b> {campaign.createdAt}</div>
+                <div><b>Status:</b> {campaign.status}</div>
+
               </div>
 
               <h4 style={{ marginTop: 12 }}>Results</h4>
