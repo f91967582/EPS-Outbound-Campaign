@@ -23,7 +23,7 @@ import {
 
 import { useFlows } from "../../hooks/useConnectFlowsList";
 import { uploadCsv, OUTBOUND_HEADER_MAP } from "../../utils/uploadCsv";
-import { getPresignedUploadUrlOutbound } from "../../api/getPresignedUploadUrlOutbound";
+import { getPresignedUploadUrlCalls } from "../../api/getPresignedUploadUrlCalls";
 import uploadFileToS3 from "../../utils/uploadFileToS3";
 import CsvPreviewTable from "../Tables/CsvPreviewTable";
 import { createCampaign } from "../../api/createCampaign";
@@ -133,7 +133,7 @@ export default function OutboundCampaign() {
         campaignId: newCampaignId,
       };
 
-      const { uploadUrl, key } = await getPresignedUploadUrlOutbound(
+      const { uploadUrl, key } = await getPresignedUploadUrlCalls(
         file,
         metadata
       );

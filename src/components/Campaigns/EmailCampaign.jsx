@@ -85,6 +85,7 @@ export default function EmailCampaign() {
       };
 
       const { uploadUrl, key } =
+
         await getPresignedUploadUrlEmail(file, metadata);
 
       await uploadFileToS3(uploadUrl, file);

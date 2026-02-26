@@ -4,7 +4,7 @@ export async function createCampaign({
   campaignType,
 }) {
   const response = await fetch(
-    "https://qm97ttj6qk.execute-api.us-east-1.amazonaws.com/campaign",
+    "https://jpeswe3371.execute-api.us-east-1.amazonaws.com/Dev/campaign",
     {
       method: "POST",
       headers: {

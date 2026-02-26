@@ -1,6 +1,6 @@
 export async function updateCampaignStatus(campaignId, payload) {
   const response = await fetch(
-    `https://qm97ttj6qk.execute-api.us-east-1.amazonaws.com/campaign/${campaignId}`,
+    `https://jpeswe3371.execute-api.us-east-1.amazonaws.com/Dev/campaign/${campaignId}`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },

@@ -1,5 +1,29 @@
 // components/CampaignsView.jsx
 import React, { useState } from "react";
+import {
+  Container,
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+  List,
+  ListItemButton,
+  ListItemText,
+  Divider,
+  Alert,
+  Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Button,
+  CircularProgress,
+  Skeleton,
+  Box,
+} from "@mui/material";
+
 import { useCampaignsList, useCampaignDetail } from "../../services/useCampaignsApi";
 
 export default function CampaignsView() {
@@ -15,100 +39,192 @@ export default function CampaignsView() {
     loadMore,
   } = useCampaignDetail(selectedId);
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "COMPLETED":
+        return "success";
+      case "FAILED":
+        return "error";
+      case "IN_PROGRESS":
+        return "info";
+      case "QUEUED":
+        return "warning";
+      default:
+        return "default";
+    }
+  };
+
   return (
-    <div style={{ padding: 16, fontFamily: "system-ui" }}>
-      <h2>Outbound Campaigns</h2>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Typography variant="h4" fontWeight={600} gutterBottom>
+        Campañas Outbound
+      </Typography>
 
       {(listError || detailError) && (
-        <div style={{ color: "crimson", marginBottom: 12 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
           {listError || detailError}
-        </div>
+        </Alert>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "360px 1fr", gap: 16 }}>
-        <div style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12 }}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <h3 style={{ margin: 0 }}>Campaigns</h3>
-            {loadingList && <span>Loading…</span>}
-          </div>
+      <Grid container spacing={3}>
+        {/* PANEL IZQUIERDO */}
+        <Grid item xs={12} md={4}>
+          <Card elevation={2}>
+            <CardContent>
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Typography variant="h6">Listado de Campañas</Typography>
+                {loadingList && <CircularProgress size={20} />}
+              </Box>
 
-          <div style={{ marginTop: 8 }}>
-            {campaigns.map((c) => (
-              <button
-                key={c.campaignId}
-                onClick={() => setSelectedId(c.campaignId)}
-                style={{
-                  width: "100%",
-                  textAlign: "left",
-                  padding: 10,
-                  marginBottom: 8,
-                  borderRadius: 8,
-                  border: selectedId === c.campaignId ? "2px solid #000" : "1px solid #ddd",
-                  background: "white",
-                  cursor: "pointer",
-                }}
-              >
-                <div style={{ fontWeight: 700 }}>{c.title || "(no title)"}</div>
-                <div style={{ fontSize: 12, color: "#555" }}>
-                  Iniciada: {c.createdAt ? new Date(c.createdAt).toLocaleString() : "—"}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
+              <Divider sx={{ my: 2 }} />
 
-        <div style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12 }}>
-          <h3 style={{ marginTop: 0 }}>Campaign Detail</h3>
+              {loadingList ? (
+                <>
+                  <Skeleton height={60} />
+                  <Skeleton height={60} />
+                  <Skeleton height={60} />
+                </>
+              ) : (
+                <List>
+                  {campaigns.map((c) => (
+                    <ListItemButton
+                      key={c.campaignId}
+                      selected={selectedId === c.campaignId}
+                      onClick={() => setSelectedId(c.campaignId)}
+                      sx={{ mb: 1, borderRadius: 2 }}
+                    >
+                      <ListItemText
+                        primary={
+                          <Typography fontWeight={600}>
+                            {c.title || "(Sin título)"}
+                          </Typography>
+                        }
+                        secondary={
+                          c.createdAt
+                            ? `Iniciada: ${new Date(c.createdAt).toLocaleString()}`
+                            : "—"
+                        }
+                      />
+                    </ListItemButton>
+                  ))}
+                </List>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
 
-          {!selectedId && <div>Select a campaign.</div>}
-          {selectedId && loadingDetail && <div>Loading…</div>}
+        {/* PANEL DERECHO */}
+        <Grid item xs={12} md={8}>
+          <Card elevation={2}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Detalle de la Campaña
+              </Typography>
 
-          {campaign && (
-            <>
-              <div style={{ padding: 10, border: "1px solid #eee", borderRadius: 8 }}>
-                <div><b>Title:</b> {campaign.title}</div>
-                <div><b>CampaignId:</b> {campaign.campaignId}</div>
-                <div><b>FlowId:</b> {campaign.flowId}</div>
-                <div><b>Created:</b> {campaign.createdAt}</div>
-                <div><b>Status:</b> {campaign.status}</div>
+              {!selectedId && (
+                <Typography color="text.secondary">
+                  Selecciona una campaña para ver los detalles.
+                </Typography>
+              )}
 
-              </div>
+              {selectedId && loadingDetail && (
+                <Box display="flex" justifyContent="center" py={4}>
+                  <CircularProgress />
+                </Box>
+              )}
 
-              <h4 style={{ marginTop: 12 }}>Results</h4>
+              {campaign && (
+                <>
+                  {/* Información general */}
+                  <Box
+                    sx={{
+                      p: 2,
+                      mb: 3,
+                      borderRadius: 2,
+                      backgroundColor: "grey.50",
+                    }}
+                  >
+                    <Typography>
+                      <strong>Título:</strong> {campaign.title}
+                    </Typography>
+                    <Typography>
+                      <strong>ID de Campaña:</strong> {campaign.campaignId}
+                    </Typography>
+                    <Typography>
+                      <strong>ID de Flujo:</strong> {campaign.flowId}
+                    </Typography>
+                    <Typography>
+                      <strong>Fecha de Creación:</strong>{" "}
+                      {new Date(campaign.createdAt).toLocaleString()}
+                    </Typography>
 
-              <div style={{ overflowX: "auto" }}>
-                <table width="100%" cellPadding="8" style={{ borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ textAlign: "left", borderBottom: "1px solid #ddd" }}>
-                      <th>Phone</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((r, idx) => (
-                      <tr key={(r.phoneNumber || "") + idx} style={{ borderBottom: "1px solid #f0f0f0" }}>
-                        <td>{r.phoneNumber || "—"}</td>
-                        <td>{r.outboundCallStatus || r.status || "—"}</td>
-                      </tr>
-                    ))}
-                    {rows.length === 0 && (
-                      <tr><td colSpan={3} style={{ color: "#666" }}>No results yet.</td></tr>
+                    <Box mt={1}>
+                      <Chip
+                        label={campaign.status}
+                        color={getStatusColor(campaign.status)}
+                        size="small"
+                      />
+                    </Box>
+                  </Box>
+
+                  {/* Resultados */}
+                  <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                    Resultados
+                  </Typography>
+
+                  <TableContainer>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell><strong>Teléfono</strong></TableCell>
+                          <TableCell><strong>Estado</strong></TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {rows.map((r, idx) => (
+                          <TableRow key={(r.phoneNumber || "") + idx}>
+                            <TableCell>{r.phoneNumber || "—"}</TableCell>
+                            <TableCell>
+                              <Chip
+                                label={r.outboundCallStatus || r.status || "—"}
+                                size="small"
+                                color={getStatusColor(r.outboundCallStatus || r.status)}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+
+                        {rows.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={2} align="center">
+                              <Typography color="text.secondary">
+                                Aún no hay resultados.
+                              </Typography>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+
+                  {/* Paginación */}
+                  <Box mt={3}>
+                    {nextToken ? (
+                      <Button variant="outlined" onClick={loadMore}>
+                        Cargar más
+                      </Button>
+                    ) : (
+                      <Typography color="text.secondary">
+                        No hay más registros.
+                      </Typography>
                     )}
-                  </tbody>
-                </table>
-              </div>
-
-              <div style={{ marginTop: 12 }}>
-                {nextToken ? (
-                  <button onClick={loadMore}>Load more</button>
-                ) : (
-                  <span style={{ color: "#666" }}>No more pages</span>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
+                  </Box>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Container>
   );
 }

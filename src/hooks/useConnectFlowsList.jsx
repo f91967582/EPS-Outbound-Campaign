@@ -9,11 +9,32 @@ export function useFlows() {
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
+
     try {
       const data = await fetchFlows();
 
-      // Safety: ensure array
-      setFlows(Array.isArray(data) ? data : []);
+      let parsedFlows = [];
+
+      // Case 1: API already returns array
+      if (Array.isArray(data)) {
+        parsedFlows = data;
+      }
+      // Case 2: Lambda proxy wrapper { statusCode, headers, body: "[]" }
+      else if (
+        data &&
+        typeof data === "object" &&
+        typeof data.statusCode === "number" &&
+        typeof data.body === "string"
+      ) {
+        const bodyParsed = JSON.parse(data.body);
+        parsedFlows = Array.isArray(bodyParsed) ? bodyParsed : [];
+      }
+      // Case 3: object with nested array (optional fallback)
+      else if (Array.isArray(data?.flows)) {
+        parsedFlows = data.flows;
+      }
+
+      setFlows(parsedFlows);
     } catch (e) {
       console.error(e);
       setError(e?.message || "Error loading flows");
