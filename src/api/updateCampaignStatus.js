@@ -1,6 +1,8 @@
 export async function updateCampaignStatus(campaignId, payload) {
-  const response = await fetch(
-    `https://jpeswe3371.execute-api.us-east-1.amazonaws.com/Dev/campaign/${campaignId}`,
+
+  const baseUrl = `${import.meta.env.VITE_BASE_URL}`;
+
+  const response = await fetch(`${baseUrl}/campaign/${campaignId}`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -19,8 +21,7 @@ export async function updateCampaignStatus(campaignId, payload) {
 
   if (!response.ok) {
     throw new Error(
-      `Failed to update campaign (${response.status}): ${
-        body?.message || body?.error || body?.raw || text || "Unknown error"
+      `Failed to update campaign (${response.status}): ${body?.message || body?.error || body?.raw || text || "Unknown error"
       }`
     );
   }

@@ -54,8 +54,7 @@ export default function EmailCampaign() {
       setParsing(true);
       const parsed = await uploadCsv(selected, EMAIL_HEADER_MAP);
       setRows(Array.isArray(parsed) ? parsed : []);
-    } catch (err) {
-      console.error(err);
+    } catch {
       setRows([]);
       setError("No se pudo leer el CSV.");
     } finally {
@@ -78,21 +77,17 @@ export default function EmailCampaign() {
         campaignType: "email",
       });
 
-
       const metadata = {
         campaignTitle,
-        campaignId
+        campaignId,
       };
 
-      const { uploadUrl, key } =
-
-        await getPresignedUploadUrlEmail(file, metadata);
+      const { uploadUrl, key } = await getPresignedUploadUrlEmail(file, metadata);
 
       await uploadFileToS3(uploadUrl, file);
 
       setS3Key(key);
-    } catch (err) {
-      console.error(err);
+    } catch {
       setError("Error subiendo archivo.");
     } finally {
       setUploading(false);
@@ -100,11 +95,7 @@ export default function EmailCampaign() {
   };
 
   const isReady =
-    campaignTitle.trim() !== "" &&
-    file &&
-    !uploading &&
-    !parsing &&
-    !s3Key;
+    campaignTitle.trim() !== "" && file && !uploading && !parsing && !s3Key;
 
   return (
     <Card sx={{ borderRadius: 3, p: 2 }}>
@@ -122,7 +113,6 @@ export default function EmailCampaign() {
 
       <CardContent>
         <Stack spacing={3}>
-
           {/* Campaign Title */}
           <TextField
             label="Título de campaña"
@@ -151,10 +141,7 @@ export default function EmailCampaign() {
               Seleccionar CSV
             </Button>
 
-            <Button
-              variant="text"
-              onClick={resetAll}
-            >
+            <Button variant="text" onClick={resetAll}>
               Limpiar
             </Button>
 
@@ -165,9 +152,7 @@ export default function EmailCampaign() {
               color="success"
               disabled={!isReady}
               onClick={handleUpload}
-              startIcon={
-                uploading ? <CircularProgress size={18} /> : null
-              }
+              startIcon={uploading ? <CircularProgress size={18} /> : null}
             >
               {uploading ? "Subiendo..." : "Confirmar y subir"}
             </Button>
@@ -183,10 +168,7 @@ export default function EmailCampaign() {
           {error && <Alert severity="error">{error}</Alert>}
 
           {parsing && (
-            <Alert
-              severity="warning"
-              icon={<CircularProgress size={18} />}
-            >
+            <Alert severity="warning" icon={<CircularProgress size={18} />}>
               Procesando CSV...
             </Alert>
           )}
@@ -195,9 +177,7 @@ export default function EmailCampaign() {
           {rows.length > 0 && (
             <>
               <Divider />
-              <Typography variant="subtitle2">
-                Vista previa
-              </Typography>
+              <Typography variant="subtitle2">Vista previa</Typography>
               <CsvPreviewTable rows={rows} />
             </>
           )}
@@ -211,7 +191,6 @@ export default function EmailCampaign() {
               </Typography>
             </Alert>
           )}
-
         </Stack>
       </CardContent>
     </Card>

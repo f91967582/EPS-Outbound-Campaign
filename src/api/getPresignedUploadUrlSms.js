@@ -1,5 +1,5 @@
 export async function getPresignedUploadUrlSms(file, metadata = {}) {
-  const url = `${import.meta.env.VITE_UPLOAD_API_URL}/uploads/upload-url-sms`;
+  const url = `${import.meta.env.VITE_BASE_URL}/uploads/upload-url-sms`;
 
   const res = await fetch(url, {
     method: "POST",

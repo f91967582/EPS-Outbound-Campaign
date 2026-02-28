@@ -14,9 +14,6 @@ export function useCampaignsList() {
       setLoading(true);
 
       const data = await apiGetCampaigns();
-      console.log("RAW API RESPONSE:", data);
-      console.log("Items:", data?.items);
-      console.log("NextToken:", data?.nextToken);
 
       const items = data.items ?? data; // supports {items:[]} or []
       setCampaigns(items);

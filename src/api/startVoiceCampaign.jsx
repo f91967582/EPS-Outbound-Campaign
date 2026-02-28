@@ -1,5 +1,5 @@
 export async function startVoiceCampaign({ campaignId, startAt, timezone = "America/Santo_Domingo" }) {
-  const API_URL = import.meta.env.VITE_UPLOAD_API_URL;
+  const API_URL = import.meta.env.VITE_BASE_URL;
 
   const response = await fetch(`${API_URL}/voice/start`, {
     method: "POST",
