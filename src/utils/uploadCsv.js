@@ -21,9 +21,7 @@ export function uploadCsv(file, headerMap) {
 }
 
 function parseCsv(text, headerMap) {
-  // Strip BOM
   text = text.replace(/^\uFEFF/, "");
-
   const delimiter = detectDelimiter(text);
 
   const lines = text
@@ -33,20 +31,16 @@ function parseCsv(text, headerMap) {
 
   if (lines.length < 2) return [];
 
-  // Normalize headers ONCE
   const rawHeaders = lines[0].split(delimiter);
   const headers = rawHeaders.map(normalizeHeader);
 
   return lines.slice(1).map((line, index) => {
     const values = line.split(delimiter);
-
     const row = { __index: index + 1 };
 
     headers.forEach((header, i) => {
       const key = headerMap[header];
-      if (key) {
-        row[key] = normalize(values[i]);
-      }
+      if (key) row[key] = normalize(values[i]);
     });
 
     return row;
@@ -74,15 +68,8 @@ function normalize(value) {
 
 export const OUTBOUND_HEADER_MAP = {
   documento: "documento",
-  tipo: "tipo"
+  tipo: "tipo",
 };
 
-export const EMAIL_HEADER_MAP = {
-  documento: "documento",
-  tipo: "tipo"
-};
-
-export const SMS_HEADER_MAP = {
-  documento: "documento",
-  tipo: "tipo"
-};
+export const EMAIL_HEADER_MAP = OUTBOUND_HEADER_MAP;
+export const SMS_HEADER_MAP = OUTBOUND_HEADER_MAP;

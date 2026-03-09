@@ -1,20 +1,17 @@
-export async function createCampaign({
-  campaignTitle,
-  flowId,
-  campaignType,
-}) {
-  const response = await fetch(
-    "https://jpeswe3371.execute-api.us-east-1.amazonaws.com/Dev/campaign",
+export async function createCampaign({ campaignTitle, flowId, campaignType }) {
+  const baseUrl = import.meta.env.VITE_BASE_URL;
+
+  if (!baseUrl) {
+    throw new Error("Missing env var: VITE_BASE_URL");
+  }
+
+  const response = await fetch(`${baseUrl}/campaign`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        campaignTitle,
-        flowId,
-        campaignType, 
-      }),
+      body: JSON.stringify({ campaignTitle, flowId, campaignType }),
     }
   );
 

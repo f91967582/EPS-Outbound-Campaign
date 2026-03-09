@@ -1,5 +1,5 @@
 export async function getPresignedUploadUrlEmail(file, metadata = {}) {
-  const url = `${import.meta.env.VITE_UPLOAD_API_URL}/uploads/upload-url-email`;
+  const url = `${import.meta.env.VITE_BASE_URL}/uploads/upload-url-email`;
 
   const res = await fetch(url, {
     method: "POST",

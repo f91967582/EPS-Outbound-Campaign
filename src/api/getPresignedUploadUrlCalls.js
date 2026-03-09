@@ -1,5 +1,5 @@
 export async function getPresignedUploadUrlCalls(file, metadata = {}) {
-  const url = `${import.meta.env.VITE_UPLOAD_API_URL}/uploads/upload-url-calls`;
+  const url = `${import.meta.env.VITE_BASE_URL}/uploads/upload-url-calls`;
 
   const res = await fetch(url, {
     method: "POST",
