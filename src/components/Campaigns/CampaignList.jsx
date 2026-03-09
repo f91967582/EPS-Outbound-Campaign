@@ -1,5 +1,4 @@
-// components/CampaignsView.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Grid,
@@ -25,11 +24,17 @@ import {
 } from "@mui/material";
 
 import { useCampaignsList, useCampaignDetail } from "../../services/useCampaignsApi";
+import { resumeCampaign } from "../../api/resumeCampaign";
+import { pauseCampaign } from "../../api/pauseCampaign";
 
 export default function CampaignsView() {
   const [selectedId, setSelectedId] = useState(null);
+  const [pausing, setPausing] = useState(false);
+  const [resuming, setResuming] = useState(false);
+  const [statusOverride, setStatusOverride] = useState(null);
 
   const { campaigns, loading: loadingList, error: listError } = useCampaignsList();
+
   const {
     campaign,
     rows,
@@ -39,18 +44,58 @@ export default function CampaignsView() {
     loadMore,
   } = useCampaignDetail(selectedId);
 
+  const currentStatus = statusOverride || campaign?.status || "UNKNOWN";
+
+  useEffect(() => {
+    setStatusOverride(null);
+  }, [selectedId]);
+
   const getStatusColor = (status) => {
     switch (status) {
       case "COMPLETED":
         return "success";
       case "FAILED":
         return "error";
-      case "IN_PROGRESS":
+      case "RUNNING":
         return "info";
       case "QUEUED":
         return "warning";
+      case "PAUSED":
+        return "secondary";
       default:
         return "default";
+    }
+  };
+
+  const handlePause = async () => {
+    if (!campaign?.campaignId) return;
+
+    try {
+      setPausing(true);
+
+      await pauseCampaign({ campaignId: campaign.campaignId });
+
+      setStatusOverride("PAUSED");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setPausing(false);
+    }
+  };
+
+  const handleResume = async () => {
+    if (!campaign?.campaignId) return;
+
+    try {
+      setResuming(true);
+
+      await resumeCampaign({ campaignId: campaign.campaignId });
+
+      setStatusOverride("QUEUED");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setResuming(false);
     }
   };
 
@@ -67,7 +112,7 @@ export default function CampaignsView() {
       )}
 
       <Grid container spacing={3}>
-        {/* PANEL IZQUIERDO */}
+        {/* LEFT PANEL */}
         <Grid item xs={12} md={4}>
           <Card elevation={2}>
             <CardContent>
@@ -113,7 +158,7 @@ export default function CampaignsView() {
           </Card>
         </Grid>
 
-        {/* PANEL DERECHO */}
+        {/* RIGHT PANEL */}
         <Grid item xs={12} md={8}>
           <Card elevation={2}>
             <CardContent>
@@ -135,7 +180,7 @@ export default function CampaignsView() {
 
               {campaign && (
                 <>
-                  {/* Información general */}
+                  {/* Campaign Info */}
                   <Box
                     sx={{
                       p: 2,
@@ -147,27 +192,56 @@ export default function CampaignsView() {
                     <Typography>
                       <strong>Título:</strong> {campaign.title}
                     </Typography>
+
                     <Typography>
                       <strong>ID de Campaña:</strong> {campaign.campaignId}
                     </Typography>
+
                     <Typography>
                       <strong>ID de Flujo:</strong> {campaign.flowId}
                     </Typography>
+
                     <Typography>
                       <strong>Fecha de Creación:</strong>{" "}
                       {new Date(campaign.createdAt).toLocaleString()}
                     </Typography>
 
-                    <Box mt={1}>
+                    <Box mt={1} display="flex" alignItems="center" gap={2}>
                       <Chip
-                        label={campaign.status}
-                        color={getStatusColor(campaign.status)}
+                        label={currentStatus}
+                        color={getStatusColor(currentStatus)}
                         size="small"
                       />
+
+                      {currentStatus === "RUNNING" && (
+                        <Button
+                          variant="contained"
+                          color="warning"
+                          size="small"
+                          onClick={handlePause}
+                          disabled={pausing || resuming}
+                          startIcon={pausing ? <CircularProgress size={16} /> : null}
+                        >
+                          {pausing ? "Pausando..." : "Pausar"}
+                        </Button>
+                      )}
+
+                      {currentStatus === "PAUSED" && (
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          size="small"
+                          onClick={handleResume}
+                          disabled={resuming || pausing}
+                          startIcon={resuming ? <CircularProgress size={16} /> : null}
+                        >
+                          {resuming ? "Reanudando..." : "Reanudar"}
+                        </Button>
+                      )}
                     </Box>
                   </Box>
 
-                  {/* Resultados */}
+                  {/* Results Table */}
                   <Typography variant="subtitle1" fontWeight={600} gutterBottom>
                     Resultados
                   </Typography>
@@ -180,15 +254,19 @@ export default function CampaignsView() {
                           <TableCell><strong>Estado</strong></TableCell>
                         </TableRow>
                       </TableHead>
+
                       <TableBody>
                         {rows.map((r, idx) => (
                           <TableRow key={(r.phoneNumber || "") + idx}>
                             <TableCell>{r.phoneNumber || "—"}</TableCell>
+
                             <TableCell>
                               <Chip
                                 label={r.outboundCallStatus || r.status || "—"}
                                 size="small"
-                                color={getStatusColor(r.outboundCallStatus || r.status)}
+                                color={getStatusColor(
+                                  r.outboundCallStatus || r.status
+                                )}
                               />
                             </TableCell>
                           </TableRow>
@@ -207,7 +285,7 @@ export default function CampaignsView() {
                     </Table>
                   </TableContainer>
 
-                  {/* Paginación */}
+                  {/* Pagination */}
                   <Box mt={3}>
                     {nextToken ? (
                       <Button variant="outlined" onClick={loadMore}>
