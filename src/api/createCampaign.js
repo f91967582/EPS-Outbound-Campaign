@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 export async function createCampaign({
   campaignTitle,
   flowId,
@@ -6,6 +7,9 @@ export async function createCampaign({
   callIntervalSeconds,
   maxConcurrentCalls
 }) {
+=======
+export async function createCampaign({ campaignTitle, flowId, campaignType }) {
+>>>>>>> origin/main
   const baseUrl = import.meta.env.VITE_BASE_URL;
 
   if (!baseUrl) {
@@ -18,6 +22,7 @@ export async function createCampaign({
       headers: {
         "Content-Type": "application/json",
       },
+<<<<<<< HEAD
       body: JSON.stringify({
         campaignTitle,
         flowId,
@@ -26,6 +31,9 @@ export async function createCampaign({
         callIntervalSeconds,
         maxConcurrentCalls,
       }),
+=======
+      body: JSON.stringify({ campaignTitle, flowId, campaignType }),
+>>>>>>> origin/main
     }
   );
 
