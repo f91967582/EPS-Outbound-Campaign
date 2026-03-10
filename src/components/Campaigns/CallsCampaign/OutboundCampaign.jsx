@@ -43,6 +43,8 @@ export default function OutboundCampaign() {
   const [maxConcurrentCalls, setMaxConcurrentCalls] = useState(5);
 
   const resetAll = () => {
+    setCampaignTitle("");
+    setFlowId("");
     setFile(null);
     setRows([]);
     setS3Key("");
@@ -54,6 +56,9 @@ export default function OutboundCampaign() {
     setScheduleEnabled(false);
     setStartDate("");
     setStartTime("");
+    setMaxAttempts(3);
+    setCallIntervalSeconds(10);
+    setMaxConcurrentCalls(5);
 
     if (inputRef.current) inputRef.current.value = "";
   };

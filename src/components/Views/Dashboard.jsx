@@ -31,11 +31,13 @@ function Dashboard() {
       <TabPanel active={tab === "details"}>
         <ContactList data={data} loading={loading} error={error} />
       </TabPanel>
-
+       
+      {/* ---- TAB 3 ---- */}
       <TabPanel active={tab === "startcampaign"}>
         <MainCampaign />
       </TabPanel>
 
+      {/* ---- TAB 4 ---- */}
       <TabPanel active={tab === "campaignlist"}>
         <CampaignsView />
       </TabPanel>

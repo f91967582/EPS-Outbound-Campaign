@@ -8,9 +8,9 @@ import {
   Typography,
 } from "@mui/material";
 
-import EmailCampaign from "./EmailCampaign/EmailCampaign.jsx";
-import SmsCampaign from "./SmsCampaign/SmsCampaign.jsx";
-import OutboundCampaign from "../../components/Campaigns/CallsCampaign/OutboundCampaign"
+import EmailCampaign from "./EmailCampaign/EmailCampaign";
+import SmsCampaign from "./SmsCampaign/SmsCampaign";
+import OutboundCampaign from "./CallsCampaign/OutboundCampaign";
 
 function MainCampaign() {
   const [campaignType, setCampaignType] = useState("voz");
