@@ -5,7 +5,7 @@ import ContactList from "./ContactList";
 import { useMetrics } from "../../hooks/useMetrics";
 import MainView from "./MainView";
 import MainCampaign from "../Campaigns/MainCampaign";
-import CampaignList from "../Campaigns/CampaignList"
+import CampaignsView from "../Campaigns/CampaignsList/CampaignsView";
 function Dashboard() {
   const [tab, setTab] = useState("mainview");
 
@@ -31,13 +31,15 @@ function Dashboard() {
       <TabPanel active={tab === "details"}>
         <ContactList data={data} loading={loading} error={error} />
       </TabPanel>
-
+       
+      {/* ---- TAB 3 ---- */}
       <TabPanel active={tab === "startcampaign"}>
         <MainCampaign />
       </TabPanel>
 
+      {/* ---- TAB 4 ---- */}
       <TabPanel active={tab === "campaignlist"}>
-        <CampaignList />
+        <CampaignsView />
       </TabPanel>
 
     </div>
