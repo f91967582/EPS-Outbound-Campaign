@@ -40,7 +40,17 @@ export default function OutboundCampaign() {
 
   const [maxAttempts, setMaxAttempts] = useState(3);
   const [callIntervalSeconds, setCallIntervalSeconds] = useState(10);
-  const [maxConcurrentCalls, setMaxConcurrentCalls] = useState(5);
+  const [maxConcurrentCalls, setMaxConcurrentCalls] = useState(0);
+  const [processAllSimultaneously, setProcessAllSimultaneously] = useState(false);
+
+  useEffect(() => {
+    console.log(
+      "[DEBUG] processAllSimultaneously changed:",
+      processAllSimultaneously,
+      "| type:",
+      typeof processAllSimultaneously
+    );
+  }, [processAllSimultaneously]);
 
   const resetAll = () => {
     setCampaignTitle("");
@@ -111,7 +121,8 @@ export default function OutboundCampaign() {
         campaignType: "voz",
         maxAttempts,
         callIntervalSeconds,
-        maxConcurrentCalls,
+        maxConcurrentCalls: processAllSimultaneously ? null : maxConcurrentCalls,
+        processAllSimultaneously,
       });
 
       const newCampaignId = response.campaignId;
@@ -214,6 +225,8 @@ export default function OutboundCampaign() {
             setCallIntervalSeconds={setCallIntervalSeconds}
             maxConcurrentCalls={maxConcurrentCalls}
             setMaxConcurrentCalls={setMaxConcurrentCalls}
+            processAllSimultaneously={processAllSimultaneously}
+            setProcessAllSimultaneously={setProcessAllSimultaneously}
           />
 
           <CampaignSchedule

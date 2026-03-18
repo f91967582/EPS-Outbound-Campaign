@@ -133,7 +133,10 @@ export default function CampaignCard({
                 <TableHead>
                   <TableRow>
                     <TableCell><strong>Teléfono</strong></TableCell>
-                    <TableCell><strong>Estado</strong></TableCell>
+                    <TableCell><strong>Intentos</strong></TableCell>
+                    <TableCell><strong>Último estado</strong></TableCell>
+                    <TableCell><strong>Estado final</strong></TableCell>
+                    <TableCell><strong>Procesamiento</strong></TableCell>
                   </TableRow>
                 </TableHead>
 
@@ -141,11 +144,34 @@ export default function CampaignCard({
                   {rows.map((r, idx) => (
                     <TableRow key={(r.phoneNumber || "") + idx}>
                       <TableCell>{r.phoneNumber || "—"}</TableCell>
+
+                      <TableCell>{r.attemptsDisplay || "—"}</TableCell>
+
                       <TableCell>
                         <Chip
-                          label={r.outboundCallStatus || r.status || "—"}
+                          label={r.lastCallStatus || "—"}
                           size="small"
-                          color={getStatusColor(r.outboundCallStatus || r.status)}
+                          color={getStatusColor(r.lastCallStatus)}
+                        />
+                      </TableCell>
+
+                      <TableCell>
+                        {r.finalStatus ? (
+                          <Chip
+                            label={r.finalStatus}
+                            size="small"
+                            color={getStatusColor(r.finalStatus)}
+                          />
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
+
+                      <TableCell>
+                        <Chip
+                          label={r.processingStatus || "—"}
+                          size="small"
+                          color={getStatusColor(r.processingStatus)}
                         />
                       </TableCell>
                     </TableRow>
@@ -153,7 +179,7 @@ export default function CampaignCard({
 
                   {rows.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={2} align="center">
+                      <TableCell colSpan={5} align="center">
                         <Typography color="text.secondary">
                           Aún no hay resultados.
                         </Typography>

@@ -6,8 +6,12 @@ export default function SmsCampaignActions({
   handlePickFile,
   resetAll,
   handleUpload,
+  handleStart,
   uploading,
+  starting,
   isReady,
+  canStart,
+  started,
 }) {
   return (
     <>
@@ -23,7 +27,7 @@ export default function SmsCampaignActions({
         <Button
           variant="outlined"
           onClick={handlePickFile}
-          disabled={uploading}
+          disabled={uploading || starting}
         >
           Seleccionar CSV
         </Button>
@@ -31,7 +35,7 @@ export default function SmsCampaignActions({
         <Button
           variant="text"
           onClick={resetAll}
-          disabled={uploading}
+          disabled={uploading || starting}
         >
           Limpiar
         </Button>
@@ -41,11 +45,21 @@ export default function SmsCampaignActions({
         <Button
           variant="contained"
           color="success"
-          disabled={!isReady}
+          disabled={!isReady || uploading || starting}
           onClick={handleUpload}
           startIcon={uploading ? <CircularProgress size={18} /> : null}
         >
           {uploading ? "Subiendo..." : "Confirmar y subir"}
+        </Button>
+
+        <Button
+          variant="contained"
+          color="primary"
+          disabled={!canStart}
+          onClick={handleStart}
+          startIcon={starting ? <CircularProgress size={18} /> : null}
+        >
+          {starting ? "Iniciando..." : started ? "Iniciada" : "Iniciar campaña"}
         </Button>
       </Stack>
     </>

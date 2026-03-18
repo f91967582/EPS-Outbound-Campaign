@@ -1,20 +1,24 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   Card,
   CardContent,
   CardHeader,
   Chip,
   Stack,
+  Divider,
 } from "@mui/material";
 
 import { uploadCsv, SMS_HEADER_MAP } from "../../../utils/uploadCsv";
 import { getPresignedUploadUrlSms } from "../../../api/getPresignedUploadUrlSms";
 import uploadFileToS3 from "../../../utils/uploadFileToS3";
 import { createCampaign } from "../../../api/createCampaign";
-
+import { startSmsCampaign } from "../../../api/startSmsCampaign";
+import { updateCampaignStatus } from "../../../api/updateCampaignStatus";
 import SmsCampaignForm from "./SmsCampaignForm";
 import SmsCampaignActions from "./SmsCampaignActions";
 import SmsCampaignFeedback from "./SmsCampaignFeedback";
+import CampaignSchedule from "../CallsCampaign/CampaignSchedule"
+
 
 export default function SmsCampaign() {
   const inputRef = useRef(null);
@@ -23,18 +27,41 @@ export default function SmsCampaign() {
   const [file, setFile] = useState(null);
   const [rows, setRows] = useState([]);
   const [s3Key, setS3Key] = useState("");
+  const [campaignId, setCampaignId] = useState(null);
+
   const [uploading, setUploading] = useState(false);
   const [parsing, setParsing] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [started, setStarted] = useState(false);
+
   const [error, setError] = useState("");
+
+  const [startDate, setStartDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const timezone = "America/Santo_Domingo";
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
 
   const resetAll = () => {
     setCampaignTitle("");
     setFile(null);
     setRows([]);
     setS3Key("");
+    setCampaignId(null);
+    setUploading(false);
+    setParsing(false);
+    setStarting(false);
+    setStarted(false);
     setError("");
+    setScheduleEnabled(false);
+    setStartDate("");
+    setStartTime("");
+
     if (inputRef.current) inputRef.current.value = "";
   };
+
+  useEffect(() => {
+    setStarted(false);
+  }, [scheduleEnabled, startDate, startTime]);
 
   const handlePickFile = () => inputRef.current?.click();
 
@@ -44,7 +71,10 @@ export default function SmsCampaign() {
 
     setError("");
     setFile(selected);
+    setRows([]);
     setS3Key("");
+    setCampaignId(null);
+    setStarted(false);
 
     try {
       setParsing(true);
@@ -74,6 +104,8 @@ export default function SmsCampaign() {
         campaignType: "sms",
       });
 
+      setCampaignId(campaignId);
+
       const metadata = {
         campaignTitle,
         campaignId,
@@ -82,6 +114,11 @@ export default function SmsCampaign() {
       const { uploadUrl, key } = await getPresignedUploadUrlSms(file, metadata);
 
       await uploadFileToS3(uploadUrl, file);
+
+      await updateCampaignStatus(campaignId, {
+        bucket: "csvfile-upload-react-dashboard-sms",
+        s3Key: key,
+      });
 
       setS3Key(key);
     } catch (err) {
@@ -92,12 +129,57 @@ export default function SmsCampaign() {
     }
   };
 
+  const handleStart = async () => {
+    if (!campaignId) {
+      setError("No hay campaignId para iniciar la campaña.");
+      return;
+    }
+
+    if (!s3Key) {
+      setError("Debes subir el archivo antes de iniciar.");
+      return;
+    }
+
+    const hasSchedule = scheduleEnabled && Boolean(startDate && startTime);
+
+    if (scheduleEnabled && !hasSchedule) {
+      setError("Selecciona fecha y hora para programar el inicio, o desactiva 'Programar inicio'.");
+      return;
+    }
+
+    try {
+      setStarting(true);
+      setError("");
+
+      const startAt = hasSchedule ? `${startDate}T${startTime}:00` : null;
+
+      await updateCampaignStatus(campaignId, {
+        status: "CREATED",
+        ...(hasSchedule ? { startAt, timezone } : { startAt: null, timezone: null }),
+      });
+
+      await startSmsCampaign({
+        campaignId,
+        ...(hasSchedule ? { startAt, timezone } : {}),
+      });
+
+      setStarted(true);
+    } catch (err) {
+      console.error(err);
+      setError("Error iniciando/programando la campaña SMS.");
+    } finally {
+      setStarting(false);
+    }
+  };
+
   const isReady =
     campaignTitle.trim() !== "" &&
     file &&
     !uploading &&
     !parsing &&
     !s3Key;
+
+  const canStart = Boolean(campaignId && s3Key) && !starting && !started;
 
   return (
     <Card sx={{ borderRadius: 3, p: 2 }}>
@@ -120,14 +202,30 @@ export default function SmsCampaign() {
             setCampaignTitle={setCampaignTitle}
           />
 
+          <Divider />
+
+          <CampaignSchedule
+            scheduleEnabled={scheduleEnabled}
+            setScheduleEnabled={setScheduleEnabled}
+            startDate={startDate}
+            setStartDate={setStartDate}
+            startTime={startTime}
+            setStartTime={setStartTime}
+            timezone={timezone}
+          />
+
           <SmsCampaignActions
             inputRef={inputRef}
             handleFileChange={handleFileChange}
             handlePickFile={handlePickFile}
             resetAll={resetAll}
             handleUpload={handleUpload}
+            handleStart={handleStart}
             uploading={uploading}
+            starting={starting}
             isReady={isReady}
+            canStart={canStart}
+            started={started}
           />
 
           <SmsCampaignFeedback
