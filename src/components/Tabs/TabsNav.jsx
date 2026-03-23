@@ -7,6 +7,7 @@ export default function TabsNav({ active, onChange }) {
       >
         Vista General
       </button>
+
       <button
         className={`tab-btn ${active === "details" ? "active" : ""}`}
         onClick={() => onChange("details")}
@@ -27,7 +28,6 @@ export default function TabsNav({ active, onChange }) {
       >
         Lista de campañas
       </button>
-
 
 
     </div>

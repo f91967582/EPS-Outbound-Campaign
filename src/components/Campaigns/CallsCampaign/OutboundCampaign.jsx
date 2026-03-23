@@ -1,25 +1,43 @@
 import { useRef, useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, Chip, Divider, Stack } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Chip,
+  Divider,
+  Stack,
+  Avatar,
+  Typography,
+  Box,
+  alpha,
+  useTheme,
+} from "@mui/material";
+
+// Icons
+import SettingsPhoneIcon from "@mui/icons-material/SettingsPhone";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import PendingActionsIcon from "@mui/icons-material/PendingActions";
 
 import { useFlows } from "../../../hooks/useConnectFlowsList";
-import { uploadCsv, OUTBOUND_HEADER_MAP } from "../../../utils/uploadCsv"
+import { uploadCsv, OUTBOUND_HEADER_MAP } from "../../../utils/uploadCsv";
 import { getPresignedUploadUrlCalls } from "../../../api/getPresignedUploadUrlCalls";
 import uploadFileToS3 from "../../../utils/uploadFileToS3";
 import { createCampaign } from "../../../api/createCampaign";
 import { updateCampaignStatus } from "../../../api/updateCampaignStatus";
 import { startVoiceCampaign } from "../../../api/startVoiceCampaign";
+
 import CampaignBasicInfo from "./CampaignBasicInfo";
 import CampaignCallSettings from "./CampaignCallSettings";
 import CampaignSchedule from "./CampaignSchedule";
 import CampaignActions from "./CampaignActions";
 
 export default function OutboundCampaign() {
+  const theme = useTheme();
   const inputRef = useRef(null);
   const { flows, loading: flowsLoading } = useFlows();
 
   const [campaignTitle, setCampaignTitle] = useState("");
   const [flowId, setFlowId] = useState("");
-
   const [file, setFile] = useState(null);
   const [rows, setRows] = useState([]);
   const [s3Key, setS3Key] = useState("");
@@ -27,9 +45,7 @@ export default function OutboundCampaign() {
   const [parsing, setParsing] = useState(false);
   const [error, setError] = useState("");
 
-  const [campaignStatus, setCampaignStatus] = useState("CREATED");
   const [campaignId, setCampaignId] = useState(null);
-
   const [starting, setStarting] = useState(false);
   const [started, setStarted] = useState(false);
 
@@ -40,7 +56,8 @@ export default function OutboundCampaign() {
 
   const [maxAttempts, setMaxAttempts] = useState(3);
   const [callIntervalSeconds, setCallIntervalSeconds] = useState(10);
-  const [maxConcurrentCalls, setMaxConcurrentCalls] = useState(5);
+  const [maxConcurrentCalls, setMaxConcurrentCalls] = useState(0);
+  const [processAllSimultaneously, setProcessAllSimultaneously] = useState(false);
 
   const resetAll = () => {
     setCampaignTitle("");
@@ -49,7 +66,6 @@ export default function OutboundCampaign() {
     setRows([]);
     setS3Key("");
     setCampaignId(null);
-    setCampaignStatus("CREATED");
     setStarting(false);
     setStarted(false);
     setError("");
@@ -78,7 +94,6 @@ export default function OutboundCampaign() {
     setRows([]);
     setS3Key("");
     setCampaignId(null);
-    setCampaignStatus("CREATED");
     setStarting(false);
     setStarted(false);
 
@@ -111,19 +126,14 @@ export default function OutboundCampaign() {
         campaignType: "voz",
         maxAttempts,
         callIntervalSeconds,
-        maxConcurrentCalls,
+        maxConcurrentCalls: processAllSimultaneously ? null : maxConcurrentCalls,
+        processAllSimultaneously,
       });
 
       const newCampaignId = response.campaignId;
       setCampaignId(newCampaignId);
-      setCampaignStatus("CREATED");
 
-      const metadata = {
-        flowId,
-        campaignTitle,
-        campaignId: newCampaignId,
-      };
-
+      const metadata = { flowId, campaignTitle, campaignId: newCampaignId };
       const { uploadUrl, key } = await getPresignedUploadUrlCalls(file, metadata);
 
       await uploadFileToS3(uploadUrl, file);
@@ -147,7 +157,7 @@ export default function OutboundCampaign() {
     const hasSchedule = scheduleEnabled && Boolean(startDate && startTime);
 
     if (scheduleEnabled && !hasSchedule) {
-      setError("Selecciona fecha y hora para programar el inicio, o desactiva 'Programar inicio'.");
+      setError("Selecciona fecha y hora o desactiva la programación.");
       return;
     }
 
@@ -170,7 +180,7 @@ export default function OutboundCampaign() {
       setStarted(true);
     } catch (err) {
       console.error(err);
-      setError("Error iniciando/programando la campaña.");
+      setError("Error iniciando la campaña.");
     } finally {
       setStarting(false);
     }
@@ -187,15 +197,34 @@ export default function OutboundCampaign() {
   const canStart = Boolean(campaignId && s3Key) && !starting && !started;
 
   return (
-    <Card sx={{ borderRadius: 3, p: 2 }}>
+    <Card
+      elevation={0}
+      sx={{
+        borderRadius: 4,
+        border: "1px solid",
+        borderColor: "divider",
+        boxShadow: "0px 4px 20px rgba(0,0,0,0.05)",
+      }}
+    >
       <CardHeader
-        title="Nueva Campaña Voz"
-        subheader="Configura la campaña y sube el CSV"
-        action={s3Key ? <Chip label="Confirmado" color="success" /> : <Chip label="Pendiente" />}
+        avatar={
+          <Avatar sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.1), color: "secondary.main" }}>
+            <SettingsPhoneIcon />
+          </Avatar>
+        }
+        title={<Typography variant="h6" fontWeight={800}>Nueva Campaña Voz</Typography>}
+        subheader="Configura la lógica de llamadas y carga la base de datos"
+        action={
+          s3Key ? (
+            <Chip icon={<CheckCircleIcon />} label="Confirmado" color="success" />
+          ) : (
+            <Chip icon={<PendingActionsIcon />} label="Pendiente" />
+          )
+        }
       />
 
       <CardContent>
-        <Stack spacing={3}>
+        <Stack spacing={4}>
           <CampaignBasicInfo
             campaignTitle={campaignTitle}
             setCampaignTitle={setCampaignTitle}
@@ -214,6 +243,8 @@ export default function OutboundCampaign() {
             setCallIntervalSeconds={setCallIntervalSeconds}
             maxConcurrentCalls={maxConcurrentCalls}
             setMaxConcurrentCalls={setMaxConcurrentCalls}
+            processAllSimultaneously={processAllSimultaneously}
+            setProcessAllSimultaneously={setProcessAllSimultaneously}
           />
 
           <CampaignSchedule
@@ -243,7 +274,6 @@ export default function OutboundCampaign() {
             error={error}
             rows={rows}
             s3Key={s3Key}
-            campaignStatus={campaignStatus}
           />
         </Stack>
       </CardContent>

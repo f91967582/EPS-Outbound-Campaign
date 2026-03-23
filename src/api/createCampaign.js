@@ -1,41 +1,33 @@
-<<<<<<< HEAD
 export async function createCampaign({
   campaignTitle,
   flowId,
   campaignType,
   maxAttempts,
   callIntervalSeconds,
-  maxConcurrentCalls
+  maxConcurrentCalls,
+  processAllSimultaneously,
 }) {
-=======
-export async function createCampaign({ campaignTitle, flowId, campaignType }) {
->>>>>>> origin/main
   const baseUrl = import.meta.env.VITE_BASE_URL;
 
   if (!baseUrl) {
     throw new Error("Missing env var: VITE_BASE_URL");
   }
 
-  const response = await fetch(`${baseUrl}/campaign`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-<<<<<<< HEAD
-      body: JSON.stringify({
-        campaignTitle,
-        flowId,
-        campaignType,
-        maxAttempts,
-        callIntervalSeconds,
-        maxConcurrentCalls,
-      }),
-=======
-      body: JSON.stringify({ campaignTitle, flowId, campaignType }),
->>>>>>> origin/main
-    }
-  );
+  const response = await fetch(`${baseUrl}/campaign`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      campaignTitle,
+      flowId,
+      campaignType,
+      maxAttempts,
+      callIntervalSeconds,
+      maxConcurrentCalls,
+      processAllSimultaneously,
+    }),
+  });
 
   if (!response.ok) {
     const text = await response.text();
@@ -44,4 +36,3 @@ export async function createCampaign({ campaignTitle, flowId, campaignType }) {
 
   return response.json();
 }
-
