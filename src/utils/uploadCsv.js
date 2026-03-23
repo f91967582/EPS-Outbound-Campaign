@@ -69,6 +69,7 @@ function normalize(value) {
 export const OUTBOUND_HEADER_MAP = {
   documento: "documento",
   tipo: "tipo",
+  telefono: "telefono",
 };
 
 export const EMAIL_HEADER_MAP = OUTBOUND_HEADER_MAP;
