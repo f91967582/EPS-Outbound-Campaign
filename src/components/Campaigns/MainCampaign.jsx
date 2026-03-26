@@ -9,7 +9,6 @@ import {
   Stack,
   alpha,
   useTheme,
-  ListItemIcon,
 } from "@mui/material";
 
 // Icons for the dropdown
@@ -52,7 +51,7 @@ function MainCampaign() {
           },
         }}
       >
-        <InputLabel id="campaign-type-label">Tipo de campaña</InputLabel>
+        <InputLabel id="campaign-type-label">Canal</InputLabel>
         <Select
           labelId="campaign-type-label"
           value={campaignType}
@@ -60,28 +59,35 @@ function MainCampaign() {
           onChange={(e) => setCampaignType(e.target.value)}
           sx={{ fontWeight: 600 }}
         >
-          {/* <MenuItem value="voz">
-            <ListItemIcon>
-              <CampaignIcon fontSize="small" />
-            </ListItemIcon>
-            Voz
-          </MenuItem> */}
+          {/* <MenuItem
+            value="voz"
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <CampaignIcon fontSize="small" color="primary" />
+            <Typography variant="body2" fontWeight={600}>
+              Voz
+            </Typography>
+          </MenuItem>*/}
 
-          <MenuItem value="sms">
-            <ListItemIcon>
-              <SmsIcon fontSize="small" color="primary" />
-            </ListItemIcon>
+          <MenuItem
+            value="sms"
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <SmsIcon fontSize="small" color="primary" />
             <Typography variant="body2" fontWeight={600}>
               SMS
             </Typography>
-          </MenuItem>
+          </MenuItem> 
 
-          {/* <MenuItem value="email">
-            <ListItemIcon>
-              <EmailIcon fontSize="small" />
-            </ListItemIcon>
-            Email
-          </MenuItem> */}
+          {/* <MenuItem
+            value="email"
+            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          >
+            <EmailIcon fontSize="small" color="primary" />
+            <Typography variant="body2" fontWeight={600}>
+              Email
+            </Typography>
+          </MenuItem>*/}
         </Select>
       </FormControl>
 

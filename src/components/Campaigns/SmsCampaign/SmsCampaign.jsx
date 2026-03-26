@@ -11,6 +11,7 @@ import {
   Typography,
   alpha,
   useTheme,
+  TextField
 } from "@mui/material";
 
 // Icons
@@ -50,6 +51,7 @@ export default function SmsCampaign() {
   const [startTime, setStartTime] = useState("");
   const timezone = "America/Santo_Domingo";
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [messageTemplate, setMessageTemplate] = useState("");
 
   const resetAll = () => {
     setCampaignTitle("");
@@ -111,6 +113,7 @@ export default function SmsCampaign() {
       const { campaignId } = await createCampaign({
         campaignTitle,
         campaignType: "sms",
+        messageTemplate,
       });
 
       setCampaignId(campaignId);
@@ -238,6 +241,16 @@ export default function SmsCampaign() {
             campaignTitle={campaignTitle}
             setCampaignTitle={setCampaignTitle}
           />
+
+         {/* <TextField
+            label="Mensaje SMS"
+            placeholder="Escribe aquí el mensaje que quieres enviar"
+            multiline
+            minRows={4}
+            fullWidth
+            value={messageTemplate}
+            onChange={(e) => setMessageTemplate(e.target.value)}
+          /> */}
 
           <Divider />
 

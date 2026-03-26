@@ -41,7 +41,6 @@ export default function CampaignList({
       }}
     >
       <CardContent sx={{ p: 3 }}>
-        {/* Header */}
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
           <Stack direction="row" alignItems="center" spacing={1.5}>
             <Avatar
@@ -127,6 +126,7 @@ export default function CampaignList({
                         </Typography>
                       </Stack>
                     }
+                    secondaryTypographyProps={{ component: "div" }}
                   />
                   {isSelected && (
                     <ChevronRightIcon fontSize="small" color="primary" />

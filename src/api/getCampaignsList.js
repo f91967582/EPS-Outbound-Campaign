@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_BASE_URL || process.env.REACT_APP_API_BASE_URL;
+const API_BASE = import.meta.env.VITE_BASE_URL;
 
 async function fetchJson(path, { params } = {}) {
   if (!API_BASE) throw new Error("Missing API base URL env var");

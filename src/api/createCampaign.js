@@ -6,6 +6,7 @@ export async function createCampaign({
   callIntervalSeconds,
   maxConcurrentCalls,
   processAllSimultaneously,
+  messageTemplate,
 }) {
   const baseUrl = import.meta.env.VITE_BASE_URL;
 
@@ -26,6 +27,7 @@ export async function createCampaign({
       callIntervalSeconds,
       maxConcurrentCalls,
       processAllSimultaneously,
+      messageTemplate,
     }),
   });
 

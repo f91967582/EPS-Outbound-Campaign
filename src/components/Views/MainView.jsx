@@ -11,6 +11,7 @@ function MainView() {
   // Total de llamadas
   const totalGestion = data?.total_registros ?? 0;
 
+
   // Llamadas entrantes o salientes
   const { entrantes, salientes } = (data?.data ?? []).reduce(
     (acc, row) => {

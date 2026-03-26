@@ -36,10 +36,6 @@ export default function CampaignsView() {
     error: listError,
   } = useCampaignsList();
 
-  const smsCampaigns = campaigns.filter(
-    (c) => String(c.campaignType).toLowerCase() === "sms"
-  );
-
   const {
     campaign,
     rows,
@@ -98,7 +94,6 @@ export default function CampaignsView() {
   return (
     <Box sx={{ bgcolor: alpha(theme.palette.grey[100], 0.4), minHeight: "100vh" }}>
       <Container maxWidth="xl" sx={{ py: 6 }}>
-        {/* Header */}
         <Stack direction="row" alignItems="center" spacing={2} mb={5}>
           <Box
             sx={{
@@ -121,7 +116,6 @@ export default function CampaignsView() {
           </Box>
         </Stack>
 
-        {/* Errors */}
         {(listError || detailError) && (
           <Alert severity="error" variant="filled" sx={{ mb: 4, borderRadius: 3 }}>
             {listError || detailError}
@@ -129,15 +123,14 @@ export default function CampaignsView() {
         )}
 
         <Grid container spacing={4}>
-          {/* LEFT LIST */}
           <Grid item xs={12} md={4}>
             <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
               <SmsIcon sx={{ fontSize: 18, color: "text.secondary" }} />
               <Typography variant="overline" fontWeight={800} sx={{ flexGrow: 1 }}>
-                Campañas SMS
+                Campañas
               </Typography>
               <Chip
-                label={smsCampaigns.length}
+                label={campaigns.length}
                 size="small"
                 variant="outlined"
                 sx={{ height: 18, fontSize: "0.65rem" }}
@@ -145,14 +138,13 @@ export default function CampaignsView() {
             </Stack>
 
             <CampaignList
-              campaigns={smsCampaigns}
+              campaigns={campaigns}
               loading={loadingList}
               selectedId={selectedId}
               onSelect={setSelectedId}
             />
           </Grid>
 
-          {/* RIGHT DETAIL */}
           <Grid item xs={12} md={8}>
             {!selectedId ? (
               <Box
