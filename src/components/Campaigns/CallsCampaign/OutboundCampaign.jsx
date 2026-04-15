@@ -22,7 +22,7 @@ import { useFlows } from "../../../hooks/useConnectFlowsList";
 import { uploadCsv, OUTBOUND_HEADER_MAP } from "../../../utils/uploadCsv";
 import { getPresignedUploadUrlCalls } from "../../../api/getPresignedUploadUrlCalls";
 import uploadFileToS3 from "../../../utils/uploadFileToS3";
-import { createCampaign } from "../../../api/createCampaign";
+import { createVoiceCampaign } from "../../../api/createVoiceCampaign";
 import { updateCampaignStatus } from "../../../api/updateCampaignStatus";
 import { startVoiceCampaign } from "../../../api/startVoiceCampaign";
 
@@ -120,7 +120,7 @@ export default function OutboundCampaign() {
       setUploading(true);
       setError("");
 
-      const response = await createCampaign({
+      const response = await createVoiceCampaign({
         campaignTitle,
         flowId,
         campaignType: "voz",
@@ -140,7 +140,7 @@ export default function OutboundCampaign() {
       setS3Key(key);
 
       await updateCampaignStatus(newCampaignId, {
-        bucket: "csvfile-upload-react-dashboard",
+        bucket: "csvfile-upload-react-dashboard-calls",
         s3Key: key,
       });
     } catch (err) {

@@ -1,17 +1,12 @@
-export async function getPresignedUploadUrlSms(file, metadata = {}) {
-  const url = `${import.meta.env.VITE_BASE_URL}/uploads/upload-url-sms`;
+export async function getPresignedUploadUrlWhatsapp(file, metadata = {}) {
+  const url = `${import.meta.env.VITE_BASE_URL}/upload-url-whatsapp`;
 
   const res = await fetch(url, {
     method: "POST",
-    headers: 
-    {
-      "Content-Type": "application/json", 
-      "X-Api-Key": import.meta.env.VITE_API_KEY,
-    },
-
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       ...metadata,
-      channel: "sms",
+      channel: "whatsapp",
       filename: file.name,
       contentType: file.type || "text/csv",
     }),

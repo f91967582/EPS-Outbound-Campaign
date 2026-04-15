@@ -2,7 +2,7 @@ export async function updateCampaignStatus(campaignId, payload) {
 
   const baseUrl = `${import.meta.env.VITE_BASE_URL}`;
 
-  const response = await fetch(`${baseUrl}/campaign/${campaignId}`,
+  const response = await fetch(`${baseUrl}/voice/campaigns/${campaignId}`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },

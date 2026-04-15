@@ -1,6 +1,9 @@
 // hooks/useCampaignsApi.js
 import { useEffect, useState, useCallback } from "react";
-import { apiGetCampaigns, apiGetCampaign, apiGetCampaignResults } from "../api/getCampaignsList";
+import {
+  apiGetCampaigns,
+  apiGetCampaignDetails,
+} from "../api/getCampaignsList";
 
 export function useCampaignsList() {
   const [campaigns, setCampaigns] = useState([]);
@@ -14,18 +17,22 @@ export function useCampaignsList() {
       setLoading(true);
 
       const data = await apiGetCampaigns();
+      console.log("[useCampaignsList] apiGetCampaigns response:", data);
 
-      const items = data.items ?? data; // supports {items:[]} or []
+      const items = data.items ?? data;
       setCampaigns(items);
       setNextToken(data.nextToken ?? null);
     } catch (e) {
+      console.error("[useCampaignsList] apiGetCampaigns error:", e);
       setError(e.message || "Error");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return { campaigns, nextToken, loading, error, reload: load };
 }
@@ -44,15 +51,17 @@ export function useCampaignDetail(campaignId) {
       setError("");
       setLoading(true);
 
-      const [c, r] = await Promise.all([
-        apiGetCampaign(campaignId),
-        apiGetCampaignResults(campaignId, { limit: 50 }),
-      ]);
+      const data = await apiGetCampaignDetails(campaignId, { limit: 50 });
 
-      setCampaign(c);
-      setRows(r.items || []);
-      setNextToken(r.nextToken || null);
+      console.log("[useCampaignDetail] apiGetCampaignDetails response:", data);
+      console.log("[useCampaignDetail] merged campaign:", data.campaign);
+      console.log("[useCampaignDetail] merged rows:", data.items);
+
+      setCampaign(data.campaign || null);
+      setRows(data.items || []);
+      setNextToken(data.nextToken || null);
     } catch (e) {
+      console.error("[useCampaignDetail] load error:", e);
       setError(e.message || "Error");
     } finally {
       setLoading(false);
@@ -61,17 +70,28 @@ export function useCampaignDetail(campaignId) {
 
   const loadMore = useCallback(async () => {
     if (!campaignId || !nextToken) return;
+
     try {
       setError("");
-      const r = await apiGetCampaignResults(campaignId, { limit: 50, nextToken });
-      setRows((prev) => [...prev, ...(r.items || [])]);
-      setNextToken(r.nextToken || null);
+
+      const data = await apiGetCampaignDetails(campaignId, {
+        limit: 50,
+        nextToken,
+      });
+
+      console.log("[useCampaignDetail] apiGetCampaignDetails loadMore response:", data);
+
+      setRows((prev) => [...prev, ...(data.items || [])]);
+      setNextToken(data.nextToken || null);
     } catch (e) {
+      console.error("[useCampaignDetail] loadMore error:", e);
       setError(e.message || "Error");
     }
   }, [campaignId, nextToken]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return { campaign, rows, nextToken, loading, error, reload: load, loadMore };
 }

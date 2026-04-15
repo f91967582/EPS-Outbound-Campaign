@@ -19,7 +19,8 @@ import { resumeCampaign } from "../../../api/resumeCampaign";
 import { pauseCampaign } from "../../../api/pauseCampaign";
 
 import CampaignList from "./CampaignList";
-import CallsCampaignCard from "./CallsCampaignsCard";
+import CampaignDetailsCard from "./CampaignDetailsCard";
+import ContactsResultsTable from "./ContactsResultsTable";
 import SmsCampaignsCard from "./SmsCampaignsCard";
 
 export default function CampaignsView() {
@@ -54,12 +55,18 @@ export default function CampaignsView() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "COMPLETED": return "success";
-      case "FAILED": return "error";
-      case "RUNNING": return "info";
-      case "QUEUED": return "warning";
-      case "PAUSED": return "secondary";
-      default: return "default";
+      case "COMPLETED":
+        return "success";
+      case "FAILED":
+        return "error";
+      case "RUNNING":
+        return "info";
+      case "QUEUED":
+        return "warning";
+      case "PAUSED":
+        return "secondary";
+      default:
+        return "default";
     }
   };
 
@@ -180,20 +187,26 @@ export default function CampaignsView() {
                 resuming={resuming}
               />
             ) : (
-              <CallsCampaignCard
-                selectedId={selectedId}
-                loading={loadingDetail}
-                campaign={campaign}
-                rows={rows}
-                nextToken={nextToken}
-                loadMore={loadMore}
-                currentStatus={currentStatus}
-                getStatusColor={getStatusColor}
-                handlePause={handlePause}
-                handleResume={handleResume}
-                pausing={pausing}
-                resuming={resuming}
-              />
+              <Stack spacing={3}>
+                <CampaignDetailsCard
+                  selectedId={selectedId}
+                  loading={loadingDetail}
+                  campaign={campaign}
+                  currentStatus={currentStatus}
+                  getStatusColor={getStatusColor}
+                  handlePause={handlePause}
+                  handleResume={handleResume}
+                  pausing={pausing}
+                  resuming={resuming}
+                />
+
+                {campaign && (
+                  <ContactsResultsTable
+                    selectedId={selectedId}
+                    getStatusColor={getStatusColor}
+                  />
+                )}
+              </Stack>
             )}
           </Grid>
         </Grid>

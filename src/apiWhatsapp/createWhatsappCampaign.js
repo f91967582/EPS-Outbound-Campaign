@@ -1,12 +1,9 @@
-export async function createCampaign({
+export async function createWhatsappCampaign({
   campaignTitle,
   flowId,
   campaignType,
-  maxAttempts,
-  callIntervalSeconds,
-  maxConcurrentCalls,
-  processAllSimultaneously,
-  messageTemplate,
+  bucket,
+  s3Key,
 }) {
   const baseUrl = import.meta.env.VITE_BASE_URL;
 
@@ -14,7 +11,7 @@ export async function createCampaign({
     throw new Error("Missing env var: VITE_BASE_URL");
   }
 
-  const response = await fetch(`${baseUrl}/campaign`, {
+  const response = await fetch(`${baseUrl}/whatsapp/campaigns`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -23,11 +20,8 @@ export async function createCampaign({
       campaignTitle,
       flowId,
       campaignType,
-      maxAttempts,
-      callIntervalSeconds,
-      maxConcurrentCalls,
-      processAllSimultaneously,
-      messageTemplate,
+      bucket,
+      s3Key,
     }),
   });
 
@@ -38,3 +32,13 @@ export async function createCampaign({
 
   return response.json();
 }
+
+
+
+
+
+
+
+
+
+

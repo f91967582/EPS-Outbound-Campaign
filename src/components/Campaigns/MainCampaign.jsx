@@ -11,19 +11,16 @@ import {
   useTheme,
 } from "@mui/material";
 
-// Icons for the dropdown
-import SmsIcon from "@mui/icons-material/Sms";
 import CampaignIcon from "@mui/icons-material/Campaign";
-import EmailIcon from "@mui/icons-material/Email";
 import TouchAppIcon from "@mui/icons-material/TouchApp";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 
-import EmailCampaign from "./EmailCampaign/EmailCampaign";
-import SmsCampaign from "./SmsCampaign/SmsCampaign";
 import OutboundCampaign from "./CallsCampaign/OutboundCampaign";
+import WhatsAppCampaign from "./WhatsappCampaign/WhatsappCampaign";
 
 function MainCampaign() {
   const theme = useTheme();
-  const [campaignType, setCampaignType] = useState("sms");
+  const [campaignType, setCampaignType] = useState("voz");
 
   return (
     <Box sx={{ mt: 2 }}>
@@ -55,46 +52,33 @@ function MainCampaign() {
         <Select
           labelId="campaign-type-label"
           value={campaignType}
-          label="Tipo de campaña"
+          label="Canal"
           onChange={(e) => setCampaignType(e.target.value)}
           sx={{ fontWeight: 600 }}
         >
-          {/* <MenuItem
-            value="voz"
-            sx={{ display: "flex", alignItems: "center", gap: 1 }}
-          >
-            <CampaignIcon fontSize="small" color="primary" />
-            <Typography variant="body2" fontWeight={600}>
-              Voz
-            </Typography>
-          </MenuItem>*/}
+          <MenuItem value="voz">
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <CampaignIcon fontSize="small" color="primary" />
+              <Typography variant="body2" fontWeight={600}>
+                Voz
+              </Typography>
+            </Box>
+          </MenuItem>
 
-          <MenuItem
-            value="sms"
-            sx={{ display: "flex", alignItems: "center", gap: 1 }}
-          >
-            <SmsIcon fontSize="small" color="primary" />
-            <Typography variant="body2" fontWeight={600}>
-              SMS
-            </Typography>
-          </MenuItem> 
-
-          {/* <MenuItem
-            value="email"
-            sx={{ display: "flex", alignItems: "center", gap: 1 }}
-          >
-            <EmailIcon fontSize="small" color="primary" />
-            <Typography variant="body2" fontWeight={600}>
-              Email
-            </Typography>
-          </MenuItem>*/}
+          <MenuItem value="whatsapp">
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <WhatsAppIcon fontSize="small" sx={{ color: "#25D366" }} />
+              <Typography variant="body2" fontWeight={600}>
+                WhatsApp
+              </Typography>
+            </Box>
+          </MenuItem>
         </Select>
       </FormControl>
 
       <Box sx={{ mt: 4 }}>
         {campaignType === "voz" && <OutboundCampaign />}
-        {campaignType === "email" && <EmailCampaign />}
-        {campaignType === "sms" && <SmsCampaign />}
+        {campaignType === "whatsapp" && <WhatsAppCampaign />}
       </Box>
     </Box>
   );

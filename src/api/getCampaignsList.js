@@ -7,7 +7,9 @@ async function fetchJson(path, { params } = {}) {
 
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
+      if (v !== undefined && v !== null && v !== "") {
+        url.searchParams.set(k, String(v));
+      }
     });
   }
 
@@ -28,15 +30,11 @@ async function fetchJson(path, { params } = {}) {
 
 // --- Endpoint wrappers ---
 export function apiGetCampaigns() {
-  return fetchJson("/campaigns");
+  return fetchJson(`/voice/campaigns`);
 }
 
-export function apiGetCampaign(campaignId) {
-  return fetchJson(`/campaigns/${encodeURIComponent(campaignId)}`);
-}
-
-export function apiGetCampaignResults(campaignId, { limit = 50, nextToken } = {}) {
-  return fetchJson(`/campaigns/${encodeURIComponent(campaignId)}/results`, {
+export function apiGetCampaignDetails(campaignId, { limit = 50, nextToken } = {}) {
+  return fetchJson(`/voice/campaigns/${encodeURIComponent(campaignId)}/details`, {
     params: { limit, nextToken },
   });
 }

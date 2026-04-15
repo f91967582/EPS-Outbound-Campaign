@@ -4,69 +4,72 @@ import {
   CardContent,
   CardHeader,
   Chip,
-  Stack,
   Divider,
+  Stack,
   Avatar,
-  Box,
   Typography,
   alpha,
   useTheme,
-  TextField
 } from "@mui/material";
 
 // Icons
-import PostAddIcon from "@mui/icons-material/PostAdd";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
 
-import { uploadCsv, SMS_HEADER_MAP } from "../../../utils/uploadCsv";
-import { getPresignedUploadUrlSms } from "../../../api/getPresignedUploadUrlSms";
+import { useFlows } from "../../../hooks/useConnectFlowsList";
+import { uploadCsv, OUTBOUND_HEADER_MAP } from "../../../utils/uploadCsv";
+import { getPresignedUploadUrlWhatsapp } from "../../../apiWhatsapp/getPresignedUploadUrlWhatsapp";
 import uploadFileToS3 from "../../../utils/uploadFileToS3";
-import { createCampaign } from "../../../api/createCampaign";
-import { startSmsCampaign } from "../../../api/startSmsCampaign";
-import { updateCampaignStatus } from "../../../api/updateCampaignStatus";
-import { saveSmsDetail } from "../../../api/saveSmsResultsApi";
+import { createWhatsappCampaign } from "../../../apiWhatsapp/createWhatsappCampaign";
+import { startCancelWhatsappCampaign } from "../../../apiWhatsapp/startCancelWhatsappCampaign";
 
-import SmsCampaignForm from "./SmsCampaignForm";
-import SmsCampaignActions from "./SmsCampaignActions";
-import SmsCampaignFeedback from "./SmsCampaignFeedback";
-import CampaignSchedule from "../CallsCampaign/CampaignSchedule";
+import CampaignBasicInfo from "./CampaignBasicInfo";
+import CampaignSchedule from "./CampaignSchedule";
+import CampaignActions from "./CampaignActions";
 
-export default function SmsCampaign() {
+
+const WHATSAPP_BUCKET = "csvfile-upload-react-dashboard-whatsapp";
+
+export default function WhatsAppCampaign() {
   const theme = useTheme();
   const inputRef = useRef(null);
+  const { flows, loading: flowsLoading } = useFlows();
 
   const [campaignTitle, setCampaignTitle] = useState("");
+  const [flowId, setFlowId] = useState("");
   const [file, setFile] = useState(null);
   const [rows, setRows] = useState([]);
   const [s3Key, setS3Key] = useState("");
-  const [campaignId, setCampaignId] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [parsing, setParsing] = useState(false);
+  const [error, setError] = useState("");
+
+  const [campaignId, setCampaignId] = useState(null);
   const [starting, setStarting] = useState(false);
   const [started, setStarted] = useState(false);
-  const [error, setError] = useState("");
 
   const [startDate, setStartDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const timezone = "America/Santo_Domingo";
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
-  const [messageTemplate, setMessageTemplate] = useState("");
+
+
 
   const resetAll = () => {
     setCampaignTitle("");
+    setFlowId("");
     setFile(null);
     setRows([]);
     setS3Key("");
     setCampaignId(null);
-    setUploading(false);
-    setParsing(false);
     setStarting(false);
     setStarted(false);
     setError("");
     setScheduleEnabled(false);
     setStartDate("");
     setStartTime("");
+
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -85,11 +88,12 @@ export default function SmsCampaign() {
     setRows([]);
     setS3Key("");
     setCampaignId(null);
+    setStarting(false);
     setStarted(false);
 
     try {
       setParsing(true);
-      const parsed = await uploadCsv(selected, SMS_HEADER_MAP);
+      const parsed = await uploadCsv(selected, OUTBOUND_HEADER_MAP);
       setRows(Array.isArray(parsed) ? parsed : []);
     } catch (err) {
       console.error(err);
@@ -100,9 +104,10 @@ export default function SmsCampaign() {
     }
   };
 
+
   const handleUpload = async () => {
-    if (!file || !campaignTitle.trim()) {
-      setError("Debes ingresar título y seleccionar archivo.");
+    if (!file || !flowId || !campaignTitle.trim()) {
+      setError("Debes completar título, flujo y seleccionar archivo.");
       return;
     }
 
@@ -110,30 +115,28 @@ export default function SmsCampaign() {
       setUploading(true);
       setError("");
 
-      const { campaignId } = await createCampaign({
-        campaignTitle,
-        campaignType: "sms",
-        messageTemplate,
-      });
+      // 1) get presigned URL
+      const metadata = {
+        flowId,
+        campaignTitle
+      };
 
-      setCampaignId(campaignId);
+      const { uploadUrl, key } =
+        await getPresignedUploadUrlWhatsapp(file, metadata);
 
-      for (const row of rows) {
-        const phoneNumber = row.phoneNumber || row.telefono;
-        if (!phoneNumber) continue;
-        await saveSmsDetail({ campaignId, phoneNumber });
-      }
-
-      const metadata = { campaignTitle, campaignId };
-      const { uploadUrl, key } = await getPresignedUploadUrlSms(file, metadata);
-
+      // 2) upload to S3
       await uploadFileToS3(uploadUrl, file);
 
-      await updateCampaignStatus(campaignId, {
-        bucket: "csvfile-upload-react-dashboard-sms",
+      // 3) create campaign WITH s3 info (like SMS)
+      const { campaignId } = await createWhatsappCampaign({
+        campaignTitle,
+        flowId,
+        campaignType: "whatsapp",
+        bucket: WHATSAPP_BUCKET,
         s3Key: key,
       });
 
+      setCampaignId(campaignId);
       setS3Key(key);
     } catch (err) {
       console.error(err);
@@ -144,15 +147,7 @@ export default function SmsCampaign() {
   };
 
   const handleStart = async () => {
-    if (!campaignId) {
-      setError("No hay campaignId para iniciar la campaña.");
-      return;
-    }
-
-    if (!s3Key) {
-      setError("Debes subir el archivo antes de iniciar.");
-      return;
-    }
+    if (!campaignId || !s3Key) return;
 
     const hasSchedule = scheduleEnabled && Boolean(startDate && startTime);
 
@@ -162,25 +157,20 @@ export default function SmsCampaign() {
     }
 
     try {
-      setStarting(true);
       setError("");
+      setStarting(true);
 
-      const startAt = hasSchedule ? `${startDate}T${startTime}:00` : null;
-
-      await updateCampaignStatus(campaignId, {
-        status: "CREATED",
-        ...(hasSchedule ? { startAt, timezone } : { startAt: null, timezone: null }),
-      });
-
-      await startSmsCampaign({
+      await startCancelWhatsappCampaign({
         campaignId,
-        ...(hasSchedule ? { startAt, timezone } : {}),
+        ...(hasSchedule
+          ? { startAt: `${startDate}T${startTime}:00`, timezone }
+          : {}),
       });
 
       setStarted(true);
     } catch (err) {
       console.error(err);
-      setError("Error iniciando la campaña SMS.");
+      setError("Error iniciando la campaña de WhatsApp.");
     } finally {
       setStarting(false);
     }
@@ -188,6 +178,7 @@ export default function SmsCampaign() {
 
   const isReady =
     campaignTitle.trim() !== "" &&
+    flowId !== "" &&
     file &&
     !uploading &&
     !parsing &&
@@ -206,51 +197,41 @@ export default function SmsCampaign() {
       }}
     >
       <CardHeader
-        sx={{ p: 3, pb: 0 }}
         avatar={
           <Avatar
             sx={{
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              color: "primary.main",
+              bgcolor: alpha(theme.palette.success.main, 0.12),
+              color: "success.main",
             }}
           >
-            <PostAddIcon />
+            <WhatsAppIcon />
           </Avatar>
         }
-        title={<Typography variant="h6" fontWeight={800}>Nueva Campaña SMS</Typography>}
-        subheader="Configura los parámetros y carga tu base de contactos"
+        title={
+          <Typography variant="h6" fontWeight={800}>
+            Nueva Campaña WhatsApp
+          </Typography>
+        }
+        subheader="Carga la base de datos y programa el envío de mensajes"
         action={
           s3Key ? (
-            <Chip
-              icon={<CheckCircleIcon />}
-              label="Archivo Confirmado"
-              color="success"
-            />
+            <Chip icon={<CheckCircleIcon />} label="Confirmado" color="success" />
           ) : (
-            <Chip
-              icon={<PendingActionsIcon />}
-              label="Configuración Pendiente"
-            />
+            <Chip icon={<PendingActionsIcon />} label="Pendiente" />
           )
         }
       />
 
-      <CardContent sx={{ p: 3 }}>
+      <CardContent>
         <Stack spacing={4}>
-          <SmsCampaignForm
+          <CampaignBasicInfo
             campaignTitle={campaignTitle}
             setCampaignTitle={setCampaignTitle}
+            flowId={flowId}
+            setFlowId={setFlowId}
+            flows={flows}
+            flowsLoading={flowsLoading}
           />
-
-         {/* <TextField
-            label="Mensaje SMS"
-            placeholder="Escribe aquí el mensaje que quieres enviar"
-            multiline
-            minRows={4}
-            fullWidth
-            value={messageTemplate}
-            onChange={(e) => setMessageTemplate(e.target.value)}
-          /> */}
 
           <Divider />
 
@@ -264,7 +245,7 @@ export default function SmsCampaign() {
             timezone={timezone}
           />
 
-          <SmsCampaignActions
+          <CampaignActions
             inputRef={inputRef}
             handleFileChange={handleFileChange}
             handlePickFile={handlePickFile}
@@ -272,16 +253,13 @@ export default function SmsCampaign() {
             handleUpload={handleUpload}
             handleStart={handleStart}
             uploading={uploading}
+            parsing={parsing}
             starting={starting}
             isReady={isReady}
             canStart={canStart}
             started={started}
-          />
-
-          <SmsCampaignFeedback
             file={file}
             error={error}
-            parsing={parsing}
             rows={rows}
             s3Key={s3Key}
           />

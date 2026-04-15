@@ -1,7 +1,7 @@
 export async function startVoiceCampaign({ campaignId, startAt, timezone = "America/Santo_Domingo" }) {
   const API_URL = import.meta.env.VITE_BASE_URL;
 
-  const response = await fetch(`${API_URL}/voice/start`, {
+  const response = await fetch(`${API_URL}/voice/init`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ campaignId, startAt, timezone }),
