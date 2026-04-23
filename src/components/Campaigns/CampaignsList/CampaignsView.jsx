@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Alert,
   Box,
@@ -7,26 +7,31 @@ import {
   Typography,
   Stack,
   Chip,
+  Divider,
   alpha,
   useTheme,
 } from "@mui/material";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import SmsIcon from "@mui/icons-material/Sms";
+import CallIcon from "@mui/icons-material/Call";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 
 import { useCampaignsList, useCampaignDetail } from "../../../services/useCampaignsApi";
+import { useWhatsappCampaignsList } from "../../../hooks/useWhatsappCampaignsList";
 import { resumeCampaign } from "../../../api/resumeCampaign";
 import { pauseCampaign } from "../../../api/pauseCampaign";
 
-import CampaignList from "./CampaignList";
-import CampaignDetailsCard from "./CampaignDetailsCard";
-import ContactsResultsTable from "./ContactsResultsTable";
-import SmsCampaignsCard from "./SmsCampaignsCard";
+import CallsCampaignList from "./CallsCampaignList";
+import WhatsappCampaignList from "./WhatsappCampaignList";
+import CallsCampaignDetailsCard from "./CallsCampaignDetailsCard";
+import WhatsappCampaignDetailsCard from "./WhatsappCampaignDetailsCard";
+import CallsContactsResultsTable from "./CallsContactsResultsTable";
 
 export default function CampaignsView() {
   const theme = useTheme();
 
   const [selectedId, setSelectedId] = useState(null);
+  const [selectedSource, setSelectedSource] = useState(null); // "voice" | "whatsapp"
   const [pausing, setPausing] = useState(false);
   const [resuming, setResuming] = useState(false);
   const [statusOverride, setStatusOverride] = useState(null);
@@ -38,20 +43,41 @@ export default function CampaignsView() {
   } = useCampaignsList();
 
   const {
+    campaigns: whatsappCampaigns = [],
+    loading: loadingWhatsappList,
+    error: whatsappListError,
+  } = useWhatsappCampaignsList();
+
+  const {
     campaign,
     rows,
     nextToken,
     loading: loadingDetail,
     error: detailError,
     loadMore,
-  } = useCampaignDetail(selectedId);
+  } = useCampaignDetail(selectedSource === "voice" ? selectedId : null);
 
-  const currentStatus = statusOverride || campaign?.status || "UNKNOWN";
-  const selectedCampaignType = String(campaign?.campaignType || "").toLowerCase();
+  const selectedWhatsappCampaign = useMemo(
+    () => whatsappCampaigns.find((c) => c.campaignId === selectedId) || null,
+    [whatsappCampaigns, selectedId]
+  );
+
+  const activeCampaign =
+    selectedSource === "whatsapp" ? selectedWhatsappCampaign : campaign;
+
+  const currentStatus = statusOverride || activeCampaign?.status || "UNKNOWN";
 
   useEffect(() => {
     setStatusOverride(null);
-  }, [selectedId]);
+  }, [selectedId, selectedSource]);
+
+  useEffect(() => {
+    console.log("[CampaignsView] regular campaigns:", campaigns);
+    console.log("[CampaignsView] whatsapp campaigns:", whatsappCampaigns);
+    console.log("[CampaignsView] selectedSource:", selectedSource);
+    console.log("[CampaignsView] selectedId:", selectedId);
+    console.log("[CampaignsView] selectedWhatsappCampaign:", selectedWhatsappCampaign);
+  }, [campaigns, whatsappCampaigns, selectedSource, selectedId, selectedWhatsappCampaign]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -71,11 +97,11 @@ export default function CampaignsView() {
   };
 
   const handlePause = async () => {
-    if (!campaign?.campaignId) return;
+    if (!activeCampaign?.campaignId) return;
 
     try {
       setPausing(true);
-      await pauseCampaign({ campaignId: campaign.campaignId });
+      await pauseCampaign({ campaignId: activeCampaign.campaignId });
       setStatusOverride("PAUSED");
     } catch (err) {
       console.error(err);
@@ -85,11 +111,11 @@ export default function CampaignsView() {
   };
 
   const handleResume = async () => {
-    if (!campaign?.campaignId) return;
+    if (!activeCampaign?.campaignId) return;
 
     try {
       setResuming(true);
-      await resumeCampaign({ campaignId: campaign.campaignId });
+      await resumeCampaign({ campaignId: activeCampaign.campaignId });
       setStatusOverride("QUEUED");
     } catch (err) {
       console.error(err);
@@ -97,6 +123,8 @@ export default function CampaignsView() {
       setResuming(false);
     }
   };
+
+  const combinedError = listError || whatsappListError || detailError;
 
   return (
     <Box sx={{ bgcolor: alpha(theme.palette.grey[100], 0.4), minHeight: "100vh" }}>
@@ -123,33 +151,67 @@ export default function CampaignsView() {
           </Box>
         </Stack>
 
-        {(listError || detailError) && (
+        {combinedError && (
           <Alert severity="error" variant="filled" sx={{ mb: 4, borderRadius: 3 }}>
-            {listError || detailError}
+            {combinedError}
           </Alert>
         )}
 
         <Grid container spacing={4}>
           <Grid item xs={12} md={4}>
-            <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
-              <SmsIcon sx={{ fontSize: 18, color: "text.secondary" }} />
-              <Typography variant="overline" fontWeight={800} sx={{ flexGrow: 1 }}>
-                Campañas
-              </Typography>
-              <Chip
-                label={campaigns.length}
-                size="small"
-                variant="outlined"
-                sx={{ height: 18, fontSize: "0.65rem" }}
-              />
-            </Stack>
+            <Stack spacing={3}>
+              <Box>
+                <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
+                  <CallIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+                  <Typography variant="overline" fontWeight={800} sx={{ flexGrow: 1 }}>
+                    Campañas Voz
+                  </Typography>
+                  <Chip
+                    label={campaigns.length}
+                    size="small"
+                    variant="outlined"
+                    sx={{ height: 18, fontSize: "0.65rem" }}
+                  />
+                </Stack>
 
-            <CampaignList
-              campaigns={campaigns}
-              loading={loadingList}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-            />
+                <CallsCampaignList
+                  campaigns={campaigns}
+                  loading={loadingList}
+                  selectedId={selectedSource === "voice" ? selectedId : null}
+                  onSelect={(id) => {
+                    setSelectedSource("voice");
+                    setSelectedId(id);
+                  }}
+                />
+              </Box>
+
+              <Divider />
+
+              <Box>
+                <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
+                  <WhatsAppIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+                  <Typography variant="overline" fontWeight={800} sx={{ flexGrow: 1 }}>
+                    Campañas WhatsApp
+                  </Typography>
+                  <Chip
+                    label={whatsappCampaigns.length}
+                    size="small"
+                    variant="outlined"
+                    sx={{ height: 18, fontSize: "0.65rem" }}
+                  />
+                </Stack>
+
+                <WhatsappCampaignList
+                  campaigns={whatsappCampaigns}
+                  loading={loadingWhatsappList}
+                  selectedId={selectedSource === "whatsapp" ? selectedId : null}
+                  onSelect={(id) => {
+                    setSelectedSource("whatsapp");
+                    setSelectedId(id);
+                  }}
+                />
+              </Box>
+            </Stack>
           </Grid>
 
           <Grid item xs={12} md={8}>
@@ -171,14 +233,11 @@ export default function CampaignsView() {
                   Selecciona una campaña para ver el detalle.
                 </Typography>
               </Box>
-            ) : selectedCampaignType === "sms" ? (
-              <SmsCampaignsCard
+            ) : selectedSource === "whatsapp" ? (
+              <WhatsappCampaignDetailsCard
                 selectedId={selectedId}
-                loading={loadingDetail}
-                campaign={campaign}
-                rows={rows}
-                nextToken={nextToken}
-                loadMore={loadMore}
+                loading={loadingWhatsappList && !selectedWhatsappCampaign}
+                campaign={selectedWhatsappCampaign}
                 currentStatus={currentStatus}
                 getStatusColor={getStatusColor}
                 handlePause={handlePause}
@@ -188,7 +247,7 @@ export default function CampaignsView() {
               />
             ) : (
               <Stack spacing={3}>
-                <CampaignDetailsCard
+                <CallsCampaignDetailsCard
                   selectedId={selectedId}
                   loading={loadingDetail}
                   campaign={campaign}
@@ -201,7 +260,7 @@ export default function CampaignsView() {
                 />
 
                 {campaign && (
-                  <ContactsResultsTable
+                  <CallsContactsResultsTable
                     selectedId={selectedId}
                     getStatusColor={getStatusColor}
                   />

@@ -14,7 +14,7 @@ import {
   useTheme,
 } from "@mui/material";
 
-import CallIcon from "@mui/icons-material/Call";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseIcon from "@mui/icons-material/Pause";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -22,7 +22,7 @@ import EventIcon from "@mui/icons-material/Event";
 import SettingsIcon from "@mui/icons-material/Settings";
 import FingerprintIcon from "@mui/icons-material/Fingerprint";
 
-export default function CampaignDetailsCard({
+export default function WhatsappCampaignDetailsCard({
   selectedId,
   loading,
   campaign,
@@ -95,15 +95,15 @@ export default function CampaignDetailsCard({
           <Stack direction="row" alignItems="center" spacing={1.5}>
             <Avatar
               sx={{
-                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                color: "primary.main",
+                bgcolor: alpha(theme.palette.success.main, 0.1),
+                color: "success.main",
               }}
             >
-              <CallIcon />
+              <WhatsAppIcon />
             </Avatar>
             <Box>
               <Typography variant="h6" fontWeight={800} sx={{ lineHeight: 1.2 }}>
-                Detalle de la Campaña de Voz
+                Detalle de la Campaña de WhatsApp
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Resumen y configuración de campaña
@@ -192,7 +192,7 @@ export default function CampaignDetailsCard({
             variant="outlined"
             sx={{
               p: 2.5,
-              bgcolor: alpha(theme.palette.primary.main, 0.01),
+              bgcolor: alpha(theme.palette.success.main, 0.02),
               borderRadius: 3,
             }}
           >
@@ -221,10 +221,13 @@ export default function CampaignDetailsCard({
                   ID: {show(campaign.campaignId)}
                 </Typography>
                 <Typography variant="caption" color="text.disabled">
-                  Tipo: {show(campaign.campaignType)}
+                  Tipo: {show(campaign.campaignType || campaign.channel || "whatsapp")}
                 </Typography>
                 <Typography variant="caption" color="text.disabled">
                   Flujo: {show(campaign.flowId)}
+                </Typography>
+                <Typography variant="caption" color="text.disabled">
+                  Template: {show(campaign.templateId)}
                 </Typography>
               </Stack>
 
@@ -243,6 +246,12 @@ export default function CampaignDetailsCard({
                   Creada: {formatDate(campaign.createdAt)}
                 </Typography>
                 <Typography variant="caption" fontWeight={500}>
+                  Iniciada: {formatDate(campaign.startedAt)}
+                </Typography>
+                <Typography variant="caption" fontWeight={500}>
+                  Finalizada: {formatDate(campaign.finishedAt)}
+                </Typography>
+                <Typography variant="caption" fontWeight={500}>
                   Estado: {show(campaign.status)}
                 </Typography>
               </Stack>
@@ -259,16 +268,25 @@ export default function CampaignDetailsCard({
                   <SettingsIcon fontSize="inherit" /> CONFIGURACIÓN
                 </Typography>
                 <Typography variant="caption" fontWeight={500}>
-                  Intentos máx.: {show(campaign.maxAttempts)}
+                  Máx. por corrida: {show(campaign.maxContactsPerRun)}
                 </Typography>
                 <Typography variant="caption" fontWeight={500}>
-                  Intervalo: {show(campaign.callIntervalSeconds)}s
+                  Total filas: {show(campaign.totalRows)}
                 </Typography>
                 <Typography variant="caption" fontWeight={500}>
-                  Concurrentes: {show(campaign.maxConcurrentCalls)}
+                  Restantes: {show(campaign.remainingRows)}
                 </Typography>
                 <Typography variant="caption" fontWeight={500}>
-                  Procesar todos: {show(campaign.processAllSimultaneously)}
+                  Último índice: {show(campaign.lastProcessedIndex)}
+                </Typography>
+                <Typography variant="caption" fontWeight={500}>
+                  Enviados: {show(campaign.sentCount)}
+                </Typography>
+                <Typography variant="caption" fontWeight={500}>
+                  Fallidos: {show(campaign.failedCount)}
+                </Typography>
+                <Typography variant="caption" fontWeight={500}>
+                  Omitidos: {show(campaign.skippedCount)}
                 </Typography>
               </Stack>
             </Box>

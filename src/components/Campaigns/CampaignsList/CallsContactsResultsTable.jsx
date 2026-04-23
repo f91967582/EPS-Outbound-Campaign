@@ -29,7 +29,7 @@ import {
     Legend,
 } from "recharts";
 
-export default function ContactsResultsTable({ selectedId }) {
+export default function CallsContactsResultsTable({ selectedId }) {
     const theme = useTheme();
     const {
         rows = [],
