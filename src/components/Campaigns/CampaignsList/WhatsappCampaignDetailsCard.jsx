@@ -21,6 +21,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import EventIcon from "@mui/icons-material/Event";
 import SettingsIcon from "@mui/icons-material/Settings";
 import FingerprintIcon from "@mui/icons-material/Fingerprint";
+import StorageIcon from "@mui/icons-material/Storage";
 
 export default function WhatsappCampaignDetailsCard({
   selectedId,
@@ -106,7 +107,7 @@ export default function WhatsappCampaignDetailsCard({
                 Detalle de la Campaña de WhatsApp
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Resumen y configuración de campaña
+                Resumen, programación y métricas de ejecución
               </Typography>
             </Box>
           </Stack>
@@ -199,7 +200,7 @@ export default function WhatsappCampaignDetailsCard({
             <Box
               sx={{
                 display: "grid",
-                gridTemplateColumns: { xs: "1fr", md: "1.35fr 1fr 1fr" },
+                gridTemplateColumns: { xs: "1fr", md: "1.2fr 1fr 1fr 1fr" },
                 gap: 3,
               }}
             >
@@ -221,13 +222,10 @@ export default function WhatsappCampaignDetailsCard({
                   ID: {show(campaign.campaignId)}
                 </Typography>
                 <Typography variant="caption" color="text.disabled">
-                  Tipo: {show(campaign.campaignType || campaign.channel || "whatsapp")}
+                  Tipo: {show(campaign.campaignType)}
                 </Typography>
                 <Typography variant="caption" color="text.disabled">
                   Flujo: {show(campaign.flowId)}
-                </Typography>
-                <Typography variant="caption" color="text.disabled">
-                  Template: {show(campaign.templateId)}
                 </Typography>
               </Stack>
 
@@ -246,7 +244,7 @@ export default function WhatsappCampaignDetailsCard({
                   Creada: {formatDate(campaign.createdAt)}
                 </Typography>
                 <Typography variant="caption" fontWeight={500}>
-                  Iniciada: {formatDate(campaign.startedAt)}
+                  Programada: {formatDate(campaign.scheduledStartUtc)}
                 </Typography>
                 <Typography variant="caption" fontWeight={500}>
                   Finalizada: {formatDate(campaign.finishedAt)}
@@ -265,10 +263,11 @@ export default function WhatsappCampaignDetailsCard({
                   alignItems="center"
                   gap={0.5}
                 >
-                  <SettingsIcon fontSize="inherit" /> CONFIGURACIÓN
+                  <SettingsIcon fontSize="inherit" /> PROGRAMACIÓN / EJECUCIÓN
                 </Typography>
+
                 <Typography variant="caption" fontWeight={500}>
-                  Máx. por corrida: {show(campaign.maxContactsPerRun)}
+                  Slots: {show(campaign.slots)}
                 </Typography>
                 <Typography variant="caption" fontWeight={500}>
                   Total filas: {show(campaign.totalRows)}
@@ -278,6 +277,19 @@ export default function WhatsappCampaignDetailsCard({
                 </Typography>
                 <Typography variant="caption" fontWeight={500}>
                   Último índice: {show(campaign.lastProcessedIndex)}
+                </Typography>
+              </Stack>
+
+              <Stack spacing={0.5}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  fontWeight={700}
+                  display="flex"
+                  alignItems="center"
+                  gap={0.5}
+                >
+                  <StorageIcon fontSize="inherit" /> ORIGEN / MÉTRICAS
                 </Typography>
                 <Typography variant="caption" fontWeight={500}>
                   Enviados: {show(campaign.sentCount)}

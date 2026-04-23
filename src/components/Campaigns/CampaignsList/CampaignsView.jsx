@@ -26,6 +26,7 @@ import WhatsappCampaignList from "./WhatsappCampaignList";
 import CallsCampaignDetailsCard from "./CallsCampaignDetailsCard";
 import WhatsappCampaignDetailsCard from "./WhatsappCampaignDetailsCard";
 import CallsContactsResultsTable from "./CallsContactsResultsTable";
+import WhatsappContactsResultsTable from "./WhatsappContactsResultsTable";
 
 export default function CampaignsView() {
   const theme = useTheme();
@@ -234,17 +235,25 @@ export default function CampaignsView() {
                 </Typography>
               </Box>
             ) : selectedSource === "whatsapp" ? (
-              <WhatsappCampaignDetailsCard
-                selectedId={selectedId}
-                loading={loadingWhatsappList && !selectedWhatsappCampaign}
-                campaign={selectedWhatsappCampaign}
-                currentStatus={currentStatus}
-                getStatusColor={getStatusColor}
-                handlePause={handlePause}
-                handleResume={handleResume}
-                pausing={pausing}
-                resuming={resuming}
-              />
+              <Stack spacing={3}>
+                <WhatsappCampaignDetailsCard
+                  selectedId={selectedId}
+                  loading={loadingWhatsappList && !selectedWhatsappCampaign}
+                  campaign={selectedWhatsappCampaign}
+                  currentStatus={currentStatus}
+                  getStatusColor={getStatusColor}
+                  handlePause={handlePause}
+                  handleResume={handleResume}
+                  pausing={pausing}
+                  resuming={resuming}
+                />
+
+                {selectedWhatsappCampaign && (
+                  <WhatsappContactsResultsTable
+                    selectedId={selectedId}
+                  />
+                )}
+              </Stack>
             ) : (
               <Stack spacing={3}>
                 <CallsCampaignDetailsCard

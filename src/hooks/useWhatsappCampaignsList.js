@@ -1,22 +1,29 @@
-// hooks/useWhatsappCampaignsList.js
-import { useCallback, useEffect, useState } from "react";
-import { apiGetWhatsappCampaigns } from "../apiWhatsapp/getWhatsappCampaignsList";
+import { useEffect, useState, useCallback } from "react";
+import {
+  apiGetWhatsappCampaigns,
+  apiGetWhatsappCampaignDetails,
+} from "../apiWhatsapp/getWhatsappCampaignsList";
 
 export function useWhatsappCampaignsList() {
   const [campaigns, setCampaigns] = useState([]);
+  const [nextToken, setNextToken] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const load = useCallback(async () => {
     try {
-      setLoading(true);
       setError("");
+      setLoading(true);
 
       const data = await apiGetWhatsappCampaigns();
-      setCampaigns(data.items || []);
-    } catch (err) {
-      setError(err.message || "Failed to load WhatsApp campaigns");
-      setCampaigns([]);
+      console.log("[useWhatsappCampaignsList] apiGetWhatsappCampaigns response:", data);
+
+      const items = data.items ?? data;
+      setCampaigns(items);
+      setNextToken(data.nextToken ?? null);
+    } catch (e) {
+      console.error("[useWhatsappCampaignsList] apiGetWhatsappCampaigns error:", e);
+      setError(e.message || "Error");
     } finally {
       setLoading(false);
     }
@@ -26,10 +33,75 @@ export function useWhatsappCampaignsList() {
     load();
   }, [load]);
 
+  return { campaigns, nextToken, loading, error, reload: load };
+}
+
+export function useWhatsappCampaignDetail(campaignId) {
+  const [campaign, setCampaign] = useState(null);
+  const [rows, setRows] = useState([]);
+  const [nextToken, setNextToken] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    if (!campaignId) return;
+
+    try {
+      setError("");
+      setLoading(true);
+
+      const data = await apiGetWhatsappCampaignDetails(campaignId, { limit: 50 });
+
+      console.log("[useWhatsappCampaignDetail] apiGetWhatsappCampaignDetails response:", data);
+      console.log("[useWhatsappCampaignDetail] merged campaign:", data.campaign);
+      console.log("[useWhatsappCampaignDetail] merged rows:", data.items);
+
+      setCampaign(data.campaign || null);
+      setRows(data.items || []);
+      setNextToken(data.nextToken || null);
+    } catch (e) {
+      console.error("[useWhatsappCampaignDetail] load error:", e);
+      setError(e.message || "Error");
+    } finally {
+      setLoading(false);
+    }
+  }, [campaignId]);
+
+  const loadMore = useCallback(async () => {
+    if (!campaignId || !nextToken) return;
+
+    try {
+      setError("");
+
+      const data = await apiGetWhatsappCampaignDetails(campaignId, {
+        limit: 50,
+        nextToken,
+      });
+
+      console.log(
+        "[useWhatsappCampaignDetail] apiGetWhatsappCampaignDetails loadMore response:",
+        data
+      );
+
+      setRows((prev) => [...prev, ...(data.items || [])]);
+      setNextToken(data.nextToken || null);
+    } catch (e) {
+      console.error("[useWhatsappCampaignDetail] loadMore error:", e);
+      setError(e.message || "Error");
+    }
+  }, [campaignId, nextToken]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
   return {
-    campaigns,
+    campaign,
+    rows,
+    nextToken,
     loading,
     error,
     reload: load,
+    loadMore,
   };
 }
