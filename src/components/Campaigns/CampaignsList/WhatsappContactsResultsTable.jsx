@@ -195,36 +195,68 @@ export default function WhatsappContactsResultsTable({ selectedId }) {
                 </TableHead>
 
                 <TableBody>
-                  {rows.map((r, idx) => (
-                    <TableRow
-                      key={`${r?.contactId || "row"}-${idx}`}
-                      hover
-                      sx={{ "&:last-child td": { border: 0 } }}
-                    >
-                      <TableCell sx={{ fontWeight: 600 }}>
-                        <Stack spacing={0.25}>
-                          <Typography variant="body2" fontWeight={700}>
-                            {show(r?.displayName || r?.contactId)}
-                          </Typography>
-                        </Stack>
-                      </TableCell>
+                  {rows.map((r, idx) => {
+                    const status = String(r?.latestStatus || "").toUpperCase();
+                    const failureReason =
+                      r?.failureReason ||
+                      r?.session?.lastFailureReason ||
+                      "";
+                    const failureCode =
+                      r?.failureCode ||
+                      r?.session?.lastFailureCode ||
+                      "";
 
-                      <TableCell>
-                        <Chip
-                          label={show(r?.latestStatus)}
-                          size="small"
-                          variant="outlined"
-                          color={getStatusColor(r?.latestStatus)}
-                          sx={{
-                            width: "fit-content",
-                            fontWeight: 600,
-                            textTransform: "uppercase",
-                            fontSize: "0.65rem",
-                          }}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                    return (
+                      <TableRow
+                        key={`${r?.contactId || "row"}-${idx}`}
+                        hover
+                        sx={{ "&:last-child td": { border: 0 } }}
+                      >
+                        <TableCell sx={{ fontWeight: 600 }}>
+                          <Stack spacing={0.25}>
+                            <Typography variant="body2" fontWeight={700}>
+                              {show(r?.displayName || r?.contactId)}
+                            </Typography>
+                          </Stack>
+                        </TableCell>
+
+                        <TableCell>
+                          <Stack spacing={0.4}>
+                            <Chip
+                              label={show(r?.latestStatus)}
+                              size="small"
+                              variant="outlined"
+                              color={getStatusColor(r?.latestStatus)}
+                              sx={{
+                                width: "fit-content",
+                                fontWeight: 600,
+                                textTransform: "uppercase",
+                                fontSize: "0.65rem",
+                              }}
+                            />
+
+                            {status === "FAILED" && failureReason && (
+                              <Typography
+                                variant="caption"
+                                sx={{ color: "error.main", fontWeight: 600 }}
+                              >
+                                {failureReason}
+                              </Typography>
+                            )}
+
+                            {status === "FAILED" && failureCode && (
+                              <Typography
+                                variant="caption"
+                                sx={{ color: "text.secondary" }}
+                              >
+                                Código: {failureCode}
+                              </Typography>
+                            )}
+                          </Stack>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
 
                   {rows.length === 0 && (
                     <TableRow>
