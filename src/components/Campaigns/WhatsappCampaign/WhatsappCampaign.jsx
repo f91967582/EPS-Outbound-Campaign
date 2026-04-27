@@ -28,7 +28,6 @@ import CampaignBasicInfo from "./CampaignBasicInfo";
 import CampaignSchedule from "./CampaignSchedule";
 import CampaignActions from "./CampaignActions";
 
-
 const WHATSAPP_BUCKET = "csvfile-upload-react-dashboard-whatsapp";
 
 export default function WhatsAppCampaign() {
@@ -54,7 +53,24 @@ export default function WhatsAppCampaign() {
   const timezone = "America/Santo_Domingo";
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
 
+  const selectedFlow = flows?.find((flow) => {
+    const candidateId =
+      flow.id ||
+      flow.Id ||
+      flow.flowId ||
+      flow.ContactFlowId ||
+      flow.Arn ||
+      "";
 
+    return candidateId === flowId;
+  });
+
+  const flowName =
+    selectedFlow?.name ||
+    selectedFlow?.Name ||
+    selectedFlow?.flowName ||
+    selectedFlow?.ContactFlowName ||
+    "";
 
   const resetAll = () => {
     setCampaignTitle("");
@@ -104,9 +120,8 @@ export default function WhatsAppCampaign() {
     }
   };
 
-
   const handleUpload = async () => {
-    if (!file || !flowId || !campaignTitle.trim()) {
+    if (!file || !flowId || !flowName || !campaignTitle.trim()) {
       setError("Debes completar título, flujo y seleccionar archivo.");
       return;
     }
@@ -118,7 +133,8 @@ export default function WhatsAppCampaign() {
       // 1) get presigned URL
       const metadata = {
         flowId,
-        campaignTitle
+        flowName,
+        campaignTitle,
       };
 
       const { uploadUrl, key } =
@@ -127,10 +143,11 @@ export default function WhatsAppCampaign() {
       // 2) upload to S3
       await uploadFileToS3(uploadUrl, file);
 
-      // 3) create campaign WITH s3 info (like SMS)
+      // 3) create campaign WITH s3 info
       const { campaignId } = await createWhatsappCampaign({
         campaignTitle,
         flowId,
+        flowName,
         campaignType: "whatsapp",
         bucket: WHATSAPP_BUCKET,
         s3Key: key,
@@ -179,6 +196,7 @@ export default function WhatsAppCampaign() {
   const isReady =
     campaignTitle.trim() !== "" &&
     flowId !== "" &&
+    flowName !== "" &&
     file &&
     !uploading &&
     !parsing &&

@@ -1,6 +1,7 @@
 export async function createWhatsappCampaign({
   campaignTitle,
   flowId,
+  flowName,
   campaignType,
   bucket,
   s3Key,
@@ -19,6 +20,7 @@ export async function createWhatsappCampaign({
     body: JSON.stringify({
       campaignTitle,
       flowId,
+      flowName,
       campaignType,
       bucket,
       s3Key,
