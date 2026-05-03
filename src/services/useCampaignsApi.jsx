@@ -53,9 +53,6 @@ export function useCampaignDetail(campaignId) {
 
       const data = await apiGetCampaignDetails(campaignId, { limit: 50 });
 
-      console.log("[useCampaignDetail] apiGetCampaignDetails response:", data);
-      console.log("[useCampaignDetail] merged campaign:", data.campaign);
-      console.log("[useCampaignDetail] merged rows:", data.items);
 
       setCampaign(data.campaign || null);
       setRows(data.items || []);
@@ -78,8 +75,6 @@ export function useCampaignDetail(campaignId) {
         limit: 50,
         nextToken,
       });
-
-      console.log("[useCampaignDetail] apiGetCampaignDetails loadMore response:", data);
 
       setRows((prev) => [...prev, ...(data.items || [])]);
       setNextToken(data.nextToken || null);
