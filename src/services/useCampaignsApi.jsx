@@ -17,7 +17,6 @@ export function useCampaignsList() {
       setLoading(true);
 
       const data = await apiGetCampaigns();
-      console.log("[useCampaignsList] apiGetCampaigns response:", data);
 
       const items = data.items ?? data;
       setCampaigns(items);
