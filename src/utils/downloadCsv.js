@@ -21,7 +21,13 @@ export function downloadCsv(filename, columns, data) {
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
-  a.click();
+  a.style.display = "none";
 
-  URL.revokeObjectURL(url);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 0);
 }

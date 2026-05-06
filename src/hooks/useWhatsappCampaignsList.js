@@ -16,7 +16,6 @@ export function useWhatsappCampaignsList() {
       setLoading(true);
 
       const data = await apiGetWhatsappCampaigns();
-      console.log("[useWhatsappCampaignsList] apiGetWhatsappCampaigns response:", data);
 
       const items = data.items ?? data;
       setCampaigns(items);
@@ -52,10 +51,6 @@ export function useWhatsappCampaignDetail(campaignId) {
 
       const data = await apiGetWhatsappCampaignDetails(campaignId, { limit: 50 });
 
-      console.log("[useWhatsappCampaignDetail] apiGetWhatsappCampaignDetails response:", data);
-      console.log("[useWhatsappCampaignDetail] merged campaign:", data.campaign);
-      console.log("[useWhatsappCampaignDetail] merged rows:", data.items);
-
       setCampaign(data.campaign || null);
       setRows(data.items || []);
       setNextToken(data.nextToken || null);
@@ -78,10 +73,6 @@ export function useWhatsappCampaignDetail(campaignId) {
         nextToken,
       });
 
-      console.log(
-        "[useWhatsappCampaignDetail] apiGetWhatsappCampaignDetails loadMore response:",
-        data
-      );
 
       setRows((prev) => [...prev, ...(data.items || [])]);
       setNextToken(data.nextToken || null);

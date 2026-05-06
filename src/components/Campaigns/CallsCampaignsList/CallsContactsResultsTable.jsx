@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
     Box,
     Button,
@@ -16,10 +16,16 @@ import {
     Paper,
     Stack,
     useTheme,
+    TextField,
+    MenuItem,
 } from "@mui/material";
 
 import SearchOffIcon from "@mui/icons-material/SearchOff";
+import DownloadIcon from "@mui/icons-material/Download";
+
 import { useCampaignDetail } from "../../../services/useCampaignsApi";
+import { downloadCsv } from "../../../utils/downloadCsv";
+
 import {
     PieChart,
     Pie,
@@ -31,6 +37,7 @@ import {
 
 export default function CallsContactsResultsTable({ selectedId }) {
     const theme = useTheme();
+
     const {
         rows = [],
         nextToken,
@@ -39,14 +46,17 @@ export default function CallsContactsResultsTable({ selectedId }) {
         loadMore,
     } = useCampaignDetail(selectedId);
 
-    // --- Color Mapping Helpers ---
+    const [search, setSearch] = useState("");
+    const [callResultFilter, setCallResultFilter] = useState("ALL");
 
     const getStatusColor = (status) => {
         const s = String(status || "").toUpperCase();
+
         if (["COMPLETED", "ANSWERED", "PROCESSED"].includes(s)) return "success";
         if (["IN_PROGRESS", "ACTIVE", "CALLING"].includes(s)) return "info";
         if (["PENDING", "QUEUED", "BUSY"].includes(s)) return "warning";
         if (["FAILED", "NO_ANSWER", "REJECTED", "ERROR"].includes(s)) return "error";
+
         return "default";
     };
 
@@ -54,27 +64,85 @@ export default function CallsContactsResultsTable({ selectedId }) {
         const status = String(
             row?.finalStatus || row?.lastCallStatus || row?.outboundCallStatus || ""
         ).toUpperCase();
+
         return status === "ANSWERED" || status === "COMPLETED";
     };
 
-    // --- Data Processing ---
+    const getCallResult = (row) =>
+        row?.lastCallStatus || row?.finalStatus || row?.outboundCallStatus || "";
+
+    const callResultOptions = useMemo(() => {
+        const values = rows
+            .map(getCallResult)
+            .filter(Boolean);
+
+        return ["ALL", ...Array.from(new Set(values))];
+    }, [rows]);
+
+    const filteredRows = useMemo(() => {
+        const q = search.trim().toLowerCase();
+
+        return rows.filter((row) => {
+            const contactId = String(row?.contactId || "").toLowerCase();
+            const callResult = String(getCallResult(row) || "");
+
+            const matchesSearch = !q || contactId.includes(q);
+
+            const matchesCallResult =
+                callResultFilter === "ALL" ||
+                callResult === callResultFilter;
+
+            return matchesSearch && matchesCallResult;
+        });
+    }, [rows, search, callResultFilter]);
 
     const chartData = useMemo(() => {
-        const contactados = rows.filter(isContactado).length;
-        const noContactados = rows.length - contactados;
+        const contactados = filteredRows.filter(isContactado).length;
+        const noContactados = filteredRows.length - contactados;
 
         return [
-            { name: "Contactados", value: contactados, color: theme.palette.success.main },
-            { name: "No contactados", value: noContactados, color: theme.palette.error.light },
+            {
+                name: "Contactados",
+                value: contactados,
+                color: theme.palette.success.main,
+            },
+            {
+                name: "No contactados",
+                value: noContactados,
+                color: theme.palette.error.light,
+            },
         ];
-    }, [rows, theme.palette]);
+    }, [filteredRows, theme.palette]);
 
     const contactadosCount = chartData[0]?.value || 0;
     const noContactadosCount = chartData[1]?.value || 0;
 
+    const hasActiveFilters = search.trim() || callResultFilter !== "ALL";
+
     const show = (value) => {
         if (value === null || value === undefined || value === "") return "—";
         return String(value);
+    };
+
+    const csvColumns = [
+        { key: "__index", label: "#" },
+        { key: "contactId", label: "Contacto" },
+        { key: "processingStatus", label: "Estado proceso" },
+        { key: "lastCallStatus", label: "Último estado llamada" },
+        { key: "finalStatus", label: "Estado final" },
+    ];
+
+    const handleDownloadCsv = () => {
+        downloadCsv(
+            `contactos-campana-${selectedId || "resultados"}.csv`,
+            csvColumns,
+            filteredRows
+        );
+    };
+
+    const handleClearFilters = () => {
+        setSearch("");
+        setCallResultFilter("ALL");
     };
 
     return (
@@ -88,18 +156,85 @@ export default function CallsContactsResultsTable({ selectedId }) {
             }}
         >
             <CardContent sx={{ p: 3 }}>
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" fontWeight={800}>
-                        CONTACTOS
-                    </Typography>
-                    <Chip
-                        label={rows.length}
+                <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    alignItems={{ xs: "stretch", sm: "center" }}
+                    justifyContent="space-between"
+                    spacing={2}
+                    sx={{ mb: 2 }}
+                >
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                        <Typography variant="subtitle2" fontWeight={800}>
+                            CONTACTOS
+                        </Typography>
+
+                        <Chip
+                            label={`${filteredRows.length}/${rows.length}`}
+                            size="small"
+                            color="primary"
+                            variant="soft"
+                            sx={{
+                                height: 20,
+                                fontSize: "0.7rem",
+                                fontWeight: 700,
+                            }}
+                        />
+                    </Stack>
+
+                    <Button
+                        variant="outlined"
                         size="small"
-                        color="primary"
-                        variant="soft" // If using MUI Joy or a custom theme, otherwise use "outlined"
-                        sx={{ height: 20, fontSize: "0.7rem", fontWeight: 700 }}
-                    />
+                        startIcon={<DownloadIcon />}
+                        onClick={handleDownloadCsv}
+                        disabled={loading || filteredRows.length === 0}
+                        sx={{ borderRadius: 2, fontWeight: 700 }}
+                    >
+                        Descargar CSV
+                    </Button>
                 </Stack>
+
+                <Paper
+                    variant="outlined"
+                    sx={{ p: 2, mb: 3, borderRadius: 3, bgcolor: "grey.50" }}
+                >
+                    <Stack
+                        direction={{ xs: "column", md: "row" }}
+                        spacing={2}
+                        alignItems={{ xs: "stretch", md: "center" }}
+                    >
+                        <TextField
+                            label="Buscar contacto"
+                            size="small"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            fullWidth
+                        />
+
+                        <TextField
+                            select
+                            label="Resultado llamada"
+                            size="small"
+                            value={callResultFilter}
+                            onChange={(e) => setCallResultFilter(e.target.value)}
+                            sx={{ minWidth: 220 }}
+                        >
+                            {callResultOptions.map((option) => (
+                                <MenuItem key={option} value={option}>
+                                    {option === "ALL" ? "Todos" : option}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+
+                        <Button
+                            variant="text"
+                            onClick={handleClearFilters}
+                            disabled={!hasActiveFilters}
+                            sx={{ fontWeight: 700, whiteSpace: "nowrap" }}
+                        >
+                            Limpiar filtros
+                        </Button>
+                    </Stack>
+                </Paper>
 
                 {error && (
                     <Typography color="error" variant="body2" sx={{ mb: 2 }}>
@@ -151,22 +286,44 @@ export default function CallsContactsResultsTable({ selectedId }) {
 
                                 <Stack spacing={1.5} sx={{ minWidth: 200 }}>
                                     <Box>
-                                        <Typography variant="caption" color="text.secondary" display="block">
+                                        <Typography
+                                            variant="caption"
+                                            color="text.secondary"
+                                            display="block"
+                                        >
                                             EFECTIVIDAD
                                         </Typography>
-                                        <Typography variant="h4" fontWeight={800} color="success.main">
-                                            {rows.length > 0 
-                                                ? Math.round((contactadosCount / rows.length) * 100) 
-                                                : 0}%
+
+                                        <Typography
+                                            variant="h4"
+                                            fontWeight={800}
+                                            color="success.main"
+                                        >
+                                            {filteredRows.length > 0
+                                                ? Math.round(
+                                                      (contactadosCount / filteredRows.length) * 100
+                                                  )
+                                                : 0}
+                                            %
                                         </Typography>
                                     </Box>
+
                                     <Stack direction="row" justifyContent="space-between">
                                         <Typography variant="body2">Contactados:</Typography>
-                                        <Typography variant="body2" fontWeight={700}>{contactadosCount}</Typography>
+                                        <Typography variant="body2" fontWeight={700}>
+                                            {contactadosCount}
+                                        </Typography>
                                     </Stack>
+
                                     <Stack direction="row" justifyContent="space-between">
                                         <Typography variant="body2">No contactados:</Typography>
-                                        <Typography variant="body2" fontWeight={700} color="error.main">{noContactadosCount}</Typography>
+                                        <Typography
+                                            variant="body2"
+                                            fontWeight={700}
+                                            color="error.main"
+                                        >
+                                            {noContactadosCount}
+                                        </Typography>
                                     </Stack>
                                 </Stack>
                             </Stack>
@@ -183,13 +340,16 @@ export default function CallsContactsResultsTable({ selectedId }) {
                                         <TableCell sx={headCellSx}>CONTACTO</TableCell>
                                         <TableCell sx={headCellSx}>ESTADO PROCESO</TableCell>
                                         <TableCell sx={headCellSx}>RESULTADO LLAMADA</TableCell>
-                                        <TableCell sx={headCellSx} align="center">INTENTOS</TableCell>
+                                        <TableCell sx={headCellSx} align="center">
+                                            INTENTOS
+                                        </TableCell>
                                     </TableRow>
                                 </TableHead>
 
                                 <TableBody>
-                                    {rows.map((r, idx) => {
+                                    {filteredRows.map((r, idx) => {
                                         const isMaxed = r?.attemptsMade >= r?.maxAttempts;
+
                                         return (
                                             <TableRow
                                                 key={`${r?.contactId || "row"}-${idx}`}
@@ -199,23 +359,38 @@ export default function CallsContactsResultsTable({ selectedId }) {
                                                 <TableCell sx={{ fontWeight: 600 }}>
                                                     {show(r?.contactId)}
                                                 </TableCell>
+
                                                 <TableCell>
-                                                    <Chip 
-                                                        label={show(r?.processingStatus)} 
-                                                        size="small" 
+                                                    <Chip
+                                                        label={show(r?.processingStatus)}
+                                                        size="small"
                                                         variant="outlined"
                                                         color={getStatusColor(r?.processingStatus)}
-                                                        sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem' }}
+                                                        sx={{
+                                                            fontWeight: 600,
+                                                            textTransform: "uppercase",
+                                                            fontSize: "0.65rem",
+                                                        }}
                                                     />
                                                 </TableCell>
+
                                                 <TableCell>
-                                                    <Typography variant="body2" fontWeight={500} color={isContactado(r) ? "success.main" : "text.primary"}>
-                                                        {show(r?.lastCallStatus || r?.finalStatus)}
+                                                    <Typography
+                                                        variant="body2"
+                                                        fontWeight={500}
+                                                        color={
+                                                            isContactado(r)
+                                                                ? "success.main"
+                                                                : "text.primary"
+                                                        }
+                                                    >
+                                                        {show(getCallResult(r))}
                                                     </Typography>
                                                 </TableCell>
+
                                                 <TableCell align="center">
-                                                    <Typography 
-                                                        variant="body2" 
+                                                    <Typography
+                                                        variant="body2"
                                                         color={isMaxed ? "error.main" : "text.secondary"}
                                                         fontWeight={isMaxed ? 700 : 400}
                                                     >
@@ -226,12 +401,21 @@ export default function CallsContactsResultsTable({ selectedId }) {
                                         );
                                     })}
 
-                                    {rows.length === 0 && (
+                                    {filteredRows.length === 0 && (
                                         <TableRow>
                                             <TableCell colSpan={4} align="center" sx={{ py: 6 }}>
-                                                <SearchOffIcon sx={{ color: "text.disabled", mb: 1, fontSize: 40 }} />
+                                                <SearchOffIcon
+                                                    sx={{
+                                                        color: "text.disabled",
+                                                        mb: 1,
+                                                        fontSize: 40,
+                                                    }}
+                                                />
+
                                                 <Typography variant="body2" color="text.secondary">
-                                                    No se encontraron registros para esta campaña.
+                                                    {rows.length === 0
+                                                        ? "No se encontraron registros para esta campaña."
+                                                        : "No se encontraron registros con los filtros seleccionados."}
                                                 </Typography>
                                             </TableCell>
                                         </TableRow>

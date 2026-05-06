@@ -21,12 +21,12 @@ import { useWhatsappCampaignsList } from "../../../hooks/useWhatsappCampaignsLis
 import { resumeCampaign } from "../../../api/resumeCampaign";
 import { pauseCampaign } from "../../../api/pauseCampaign";
 
-import CallsCampaignList from "./CallsCampaignList";
-import WhatsappCampaignList from "./WhatsappCampaignList";
-import CallsCampaignDetailsCard from "./CallsCampaignDetailsCard";
-import WhatsappCampaignDetailsCard from "./WhatsappCampaignDetailsCard";
-import CallsContactsResultsTable from "./CallsContactsResultsTable";
-import WhatsappContactsResultsTable from "./WhatsappContactsResultsTable";
+import CallsCampaignList from "../CallsCampaignsList/CallsCampaignList";
+import WhatsappCampaignList from "../WhatsappCampaignsList/WhatsappCampaignList";
+import CallsCampaignDetailsCard from "../CallsCampaignsList/CallsCampaignDetailsCard";
+import WhatsappCampaignDetailsCard from "../WhatsappCampaignsList/WhatsappCampaignDetailsCard";
+import CallsContactsResultsTable from "../CallsCampaignsList/CallsContactsResultsTable";
+import WhatsappContactsResultsTable from "../WhatsappCampaignsList/WhatsappContactsResultsTable";
 
 export default function CampaignsView() {
   const theme = useTheme();
@@ -71,14 +71,6 @@ export default function CampaignsView() {
   useEffect(() => {
     setStatusOverride(null);
   }, [selectedId, selectedSource]);
-
-  useEffect(() => {
-    console.log("[CampaignsView] regular campaigns:", campaigns);
-    console.log("[CampaignsView] whatsapp campaigns:", whatsappCampaigns);
-    console.log("[CampaignsView] selectedSource:", selectedSource);
-    console.log("[CampaignsView] selectedId:", selectedId);
-    console.log("[CampaignsView] selectedWhatsappCampaign:", selectedWhatsappCampaign);
-  }, [campaigns, whatsappCampaigns, selectedSource, selectedId, selectedWhatsappCampaign]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -186,7 +178,7 @@ export default function CampaignsView() {
                 />
               </Box>
 
-              <Divider />
+              {/* <Divider />
 
               <Box>
                 <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
@@ -211,7 +203,7 @@ export default function CampaignsView() {
                     setSelectedId(id);
                   }}
                 />
-              </Box>
+              </Box> */}
             </Stack>
           </Grid>
 
@@ -249,9 +241,7 @@ export default function CampaignsView() {
                 />
 
                 {selectedWhatsappCampaign && (
-                  <WhatsappContactsResultsTable
-                    selectedId={selectedId}
-                  />
+                  <WhatsappContactsResultsTable selectedId={selectedId} />
                 )}
               </Stack>
             ) : (
