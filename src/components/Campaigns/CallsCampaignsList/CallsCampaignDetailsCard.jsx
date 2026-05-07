@@ -35,6 +35,16 @@ export default function CallsCampaignDetailsCard({
 }) {
   const theme = useTheme();
 
+  React.useEffect(() => {
+    if (!selectedId) return;
+
+    console.group("Selected campaign");
+    console.log("campaignId:", selectedId);
+    console.log("campaign object:", campaign);
+    console.log("scheduledAt:", campaign?.scheduledAt);
+    console.groupEnd();
+  }, [selectedId, campaign]);
+
   const renderSoftChip = (label, status) => {
     const safeStatus = status || label || "—";
     const color = getStatusColor?.(safeStatus) || "default";
@@ -239,9 +249,15 @@ export default function CallsCampaignDetailsCard({
                 >
                   <EventIcon fontSize="inherit" /> FECHAS / ESTADO
                 </Typography>
+
                 <Typography variant="caption" fontWeight={500}>
                   Creada: {formatDate(campaign.createdAt)}
                 </Typography>
+
+                <Typography variant="caption" fontWeight={500}>
+                  Programada: {formatDate(campaign.scheduledAt)}
+                </Typography>
+
                 <Typography variant="caption" fontWeight={500}>
                   Estado: {show(campaign.status)}
                 </Typography>

@@ -52,6 +52,7 @@ export function useCampaignDetail(campaignId) {
 
       const data = await apiGetCampaignDetails(campaignId, { limit: 50 });
 
+ 
 
       setCampaign(data.campaign || null);
       setRows(data.items || []);
@@ -74,6 +75,7 @@ export function useCampaignDetail(campaignId) {
         limit: 50,
         nextToken,
       });
+
 
       setRows((prev) => [...prev, ...(data.items || [])]);
       setNextToken(data.nextToken || null);

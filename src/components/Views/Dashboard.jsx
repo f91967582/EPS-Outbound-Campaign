@@ -1,8 +1,8 @@
 import { useState } from "react";
 import TabsNav from "../Tabs/TabsNav";
 import TabPanel from "../Tabs/TabPanel";
-import MainCampaign from "../Campaigns/MainCampaign";
-import CampaignsView from "../Campaigns/CampaignsList/CampaignsView";
+import MainCampaign from "../Campaigns/CampaignsView/MainCampaign";
+import CampaignsView from "../Campaigns/CampaignsView/CampaignsView";
 
 function Dashboard() {
   const [tab, setTab] = useState("startcampaign");

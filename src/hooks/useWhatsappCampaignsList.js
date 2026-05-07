@@ -50,7 +50,6 @@ export function useWhatsappCampaignDetail(campaignId) {
 
       const data = await apiGetWhatsappCampaignDetails(campaignId, { limit: 50 });
 
-
       setCampaign(data.campaign || null);
       setRows(data.items || []);
       setNextToken(data.nextToken || null);
@@ -73,7 +72,6 @@ export function useWhatsappCampaignDetail(campaignId) {
         nextToken,
       });
 
-   
 
       setRows((prev) => [...prev, ...(data.items || [])]);
       setNextToken(data.nextToken || null);
