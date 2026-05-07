@@ -21,7 +21,6 @@ export function useWhatsappCampaignsList() {
       setCampaigns(items);
       setNextToken(data.nextToken ?? null);
     } catch (e) {
-      console.error("[useWhatsappCampaignsList] apiGetWhatsappCampaigns error:", e);
       setError(e.message || "Error");
     } finally {
       setLoading(false);
