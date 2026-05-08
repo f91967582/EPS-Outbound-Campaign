@@ -1,9 +1,10 @@
 export async function createVoiceCampaign({
   campaignTitle,
   flowId,
+  flowName,
   campaignType,
   maxAttempts,
-  callIntervalSeconds,
+  setCallIntervalSeconds,
   maxConcurrentCalls,
   processAllSimultaneously,
   messageTemplate,
@@ -22,9 +23,10 @@ export async function createVoiceCampaign({
     body: JSON.stringify({
       campaignTitle,
       flowId,
+      flowName,
       campaignType,
       maxAttempts,
-      callIntervalSeconds,
+      setCallIntervalSeconds,
       maxConcurrentCalls,
       processAllSimultaneously,
       messageTemplate,

@@ -150,8 +150,18 @@ export default function CampaignsView() {
           </Alert>
         )}
 
-        <Grid container spacing={4}>
-          <Grid item xs={12} md={4}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              lg: "320px minmax(0, 1fr)",
+            },
+            gap: 3,
+            alignItems: "flex-start",
+          }}
+        >
+          <Box sx={{ minWidth: 0 }}>
             <Stack spacing={3}>
               <Box>
                 <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
@@ -177,37 +187,10 @@ export default function CampaignsView() {
                   }}
                 />
               </Box>
-
-              {/* <Divider />
-
-              <Box>
-                <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
-                  <WhatsAppIcon sx={{ fontSize: 18, color: "text.secondary" }} />
-                  <Typography variant="overline" fontWeight={800} sx={{ flexGrow: 1 }}>
-                    Campañas WhatsApp
-                  </Typography>
-                  <Chip
-                    label={whatsappCampaigns.length}
-                    size="small"
-                    variant="outlined"
-                    sx={{ height: 18, fontSize: "0.65rem" }}
-                  />
-                </Stack>
-
-                <WhatsappCampaignList
-                  campaigns={whatsappCampaigns}
-                  loading={loadingWhatsappList}
-                  selectedId={selectedSource === "whatsapp" ? selectedId : null}
-                  onSelect={(id) => {
-                    setSelectedSource("whatsapp");
-                    setSelectedId(id);
-                  }}
-                />
-              </Box> */}
             </Stack>
-          </Grid>
+          </Box>
 
-          <Grid item xs={12} md={8}>
+          <Box sx={{ minWidth: 0 }}>
             {!selectedId ? (
               <Box
                 sx={{
@@ -227,7 +210,7 @@ export default function CampaignsView() {
                 </Typography>
               </Box>
             ) : selectedSource === "whatsapp" ? (
-              <Stack spacing={3}>
+              <Stack spacing={3} sx={{ minWidth: 0 }}>
                 <WhatsappCampaignDetailsCard
                   selectedId={selectedId}
                   loading={loadingWhatsappList && !selectedWhatsappCampaign}
@@ -245,7 +228,7 @@ export default function CampaignsView() {
                 )}
               </Stack>
             ) : (
-              <Stack spacing={3}>
+              <Stack spacing={3} sx={{ minWidth: 0 }}>
                 <CallsCampaignDetailsCard
                   selectedId={selectedId}
                   loading={loadingDetail}
@@ -266,8 +249,8 @@ export default function CampaignsView() {
                 )}
               </Stack>
             )}
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Container>
     </Box>
   );

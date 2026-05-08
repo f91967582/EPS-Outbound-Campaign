@@ -85,6 +85,7 @@ export default function CallsCampaignDetailsCard({
     return String(value);
   };
 
+
   return (
     <Card
       elevation={0}
@@ -201,8 +202,8 @@ export default function CallsCampaignDetailsCard({
           <Paper
             variant="outlined"
             sx={{
-              p: 2.5,
-              bgcolor: alpha(theme.palette.primary.main, 0.01),
+              p: 3,
+              bgcolor: alpha(theme.palette.primary.main, 0.015),
               borderRadius: 3,
             }}
           >
@@ -210,81 +211,134 @@ export default function CallsCampaignDetailsCard({
               sx={{
                 display: "grid",
                 gridTemplateColumns: { xs: "1fr", md: "1.35fr 1fr 1fr" },
-                gap: 3,
+                gap: 4,
               }}
             >
-              <Stack spacing={0.5}>
+              <Stack spacing={0.75}>
                 <Typography
-                  variant="caption"
+                  variant="overline"
                   color="text.secondary"
-                  fontWeight={700}
+                  fontWeight={800}
                   display="flex"
                   alignItems="center"
-                  gap={0.5}
+                  gap={0.75}
+                  sx={{
+                    fontSize: "0.72rem",
+                    letterSpacing: "0.08rem",
+                    lineHeight: 1.2,
+                  }}
                 >
-                  <FingerprintIcon fontSize="inherit" /> IDENTIFICACIÓN
+                  <FingerprintIcon fontSize="small" /> IDENTIFICACION
                 </Typography>
-                <Typography variant="body2" fontWeight={700}>
+
+                <Typography
+                  variant="subtitle1"
+                  fontWeight={900}
+                  sx={{
+                    lineHeight: 1.25,
+                    color: "text.primary",
+                  }}
+                >
                   {show(campaign.title)}
                 </Typography>
-                <Typography variant="caption" color="text.disabled">
-                  ID: {show(campaign.campaignId)}
+
+                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                  Tipo:{" "}
+                  <Box component="span" color="text.primary" fontWeight={700}>
+                    {show(campaign.campaignType)}
+                  </Box>
                 </Typography>
-                <Typography variant="caption" color="text.disabled">
-                  Tipo: {show(campaign.campaignType)}
-                </Typography>
-                <Typography variant="caption" color="text.disabled">
-                  Flujo: {show(campaign.flowId)}
+
+                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                  Flujo:{" "}
+                  <Box component="span" color="text.primary" fontWeight={700}>
+                    {show(campaign.flowName)}
+                  </Box>
                 </Typography>
               </Stack>
 
-              <Stack spacing={0.5}>
+              <Stack spacing={0.75}>
                 <Typography
-                  variant="caption"
+                  variant="overline"
                   color="text.secondary"
-                  fontWeight={700}
+                  fontWeight={800}
                   display="flex"
                   alignItems="center"
-                  gap={0.5}
+                  gap={0.75}
+                  sx={{
+                    fontSize: "0.72rem",
+                    letterSpacing: "0.08rem",
+                    lineHeight: 1.2,
+                  }}
                 >
-                  <EventIcon fontSize="inherit" /> FECHAS / ESTADO
+                  <EventIcon fontSize="small" /> FECHAS / ESTADO
                 </Typography>
 
-                <Typography variant="caption" fontWeight={500}>
-                  Creada: {formatDate(campaign.createdAt)}
+                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                  Creada:{" "}
+                  <Box component="span" color="text.primary" fontWeight={700}>
+                    {formatDate(campaign.createdAt)}
+                  </Box>
                 </Typography>
 
-                <Typography variant="caption" fontWeight={500}>
-                  Programada: {formatDate(campaign.scheduledAt)}
+                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                  Programada:{" "}
+                  <Box component="span" color="text.primary" fontWeight={700}>
+                    {formatDate(campaign.scheduledAt)}
+                  </Box>
                 </Typography>
 
-                <Typography variant="caption" fontWeight={500}>
-                  Estado: {show(campaign.status)}
+                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                  Estado:{" "}
+                  <Box component="span" color="text.primary" fontWeight={700}>
+                    {show(campaign.status)}
+                  </Box>
                 </Typography>
               </Stack>
 
-              <Stack spacing={0.5}>
+              <Stack spacing={0.75}>
                 <Typography
-                  variant="caption"
+                  variant="overline"
                   color="text.secondary"
-                  fontWeight={700}
+                  fontWeight={800}
                   display="flex"
                   alignItems="center"
-                  gap={0.5}
+                  gap={0.75}
+                  sx={{
+                    fontSize: "0.72rem",
+                    letterSpacing: "0.08rem",
+                    lineHeight: 1.2,
+                  }}
                 >
-                  <SettingsIcon fontSize="inherit" /> CONFIGURACIÓN
+                  <SettingsIcon fontSize="small" /> CONFIGURACION
                 </Typography>
-                <Typography variant="caption" fontWeight={500}>
-                  Intentos máx.: {show(campaign.maxAttempts)}
+
+                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                  Intentos max:{" "}
+                  <Box component="span" color="text.primary" fontWeight={700}>
+                    {show(campaign.maxAttempts)}
+                  </Box>
                 </Typography>
-                <Typography variant="caption" fontWeight={500}>
-                  Intervalo: {show(campaign.callIntervalSeconds)}s
+
+                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                  Intervalo:{" "}
+                  <Box component="span" color="text.primary" fontWeight={700}>
+                    {show(campaign.callIntervalSeconds)}m
+                  </Box>
                 </Typography>
-                <Typography variant="caption" fontWeight={500}>
-                  Concurrentes: {show(campaign.maxConcurrentCalls)}
+
+                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                  Concurrentes:{" "}
+                  <Box component="span" color="text.primary" fontWeight={700}>
+                    {show(campaign.maxConcurrentCalls)}
+                  </Box>
                 </Typography>
-                <Typography variant="caption" fontWeight={500}>
-                  Procesar todos: {show(campaign.processAllSimultaneously)}
+
+                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                  Procesar todos:{" "}
+                  <Box component="span" color="text.primary" fontWeight={700}>
+                    {show(campaign.processAllSimultaneously)}
+                  </Box>
                 </Typography>
               </Stack>
             </Box>

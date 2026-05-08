@@ -110,9 +110,12 @@ export default function OutboundCampaign() {
     }
   };
 
+  const selectedFlow = flows.find((flow) => String(flow.id) === String(flowId));
+  const flowName = selectedFlow?.name || "";
+
   const handleUpload = async () => {
-    if (!file || !flowId || !campaignTitle.trim()) {
-      setError("Debes completar título, flujo y seleccionar archivo.");
+    if (!file || !flowId || !flowName || !campaignTitle.trim()) {
+      setError("Debes completar titulo, flujo y seleccionar archivo.");
       return;
     }
 
@@ -123,9 +126,10 @@ export default function OutboundCampaign() {
       const response = await createVoiceCampaign({
         campaignTitle,
         flowId,
+        flowName,
         campaignType: "voz",
         maxAttempts,
-        callIntervalSeconds,
+        setCallIntervalSeconds,
         maxConcurrentCalls: processAllSimultaneously ? null : maxConcurrentCalls,
         processAllSimultaneously,
       });
@@ -133,7 +137,13 @@ export default function OutboundCampaign() {
       const newCampaignId = response.campaignId;
       setCampaignId(newCampaignId);
 
-      const metadata = { flowId, campaignTitle, campaignId: newCampaignId };
+      const metadata = {
+        flowId,
+        flowName,
+        campaignTitle,
+        campaignId: newCampaignId,
+      };
+
       const { uploadUrl, key } = await getPresignedUploadUrlCalls(file, metadata);
 
       await uploadFileToS3(uploadUrl, file);
@@ -239,7 +249,6 @@ export default function OutboundCampaign() {
           <CampaignCallSettings
             maxAttempts={maxAttempts}
             setMaxAttempts={setMaxAttempts}
-            callIntervalSeconds={callIntervalSeconds}
             setCallIntervalSeconds={setCallIntervalSeconds}
             maxConcurrentCalls={maxConcurrentCalls}
             setMaxConcurrentCalls={setMaxConcurrentCalls}
