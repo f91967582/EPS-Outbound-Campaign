@@ -197,17 +197,22 @@ export default function CallsContactsResultsTable({ selectedId }) {
                     variant="outlined"
                     sx={{ p: 2, mb: 3, borderRadius: 3, bgcolor: "grey.50" }}
                 >
+
                     <Stack
                         direction={{ xs: "column", md: "row" }}
                         spacing={2}
                         alignItems={{ xs: "stretch", md: "center" }}
+                        sx={{ width: "100%" }}
                     >
                         <TextField
                             label="Buscar contacto"
                             size="small"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            fullWidth
+                            sx={{
+                                flex: { xs: "1 1 auto", md: "1 1 320px" },
+                                minWidth: 0,
+                            }}
                         />
 
                         <TextField
@@ -216,7 +221,10 @@ export default function CallsContactsResultsTable({ selectedId }) {
                             size="small"
                             value={callResultFilter}
                             onChange={(e) => setCallResultFilter(e.target.value)}
-                            sx={{ minWidth: 220 }}
+                            sx={{
+                                flex: { xs: "1 1 auto", md: "0 1 220px" },
+                                minWidth: { xs: "100%", md: 180 },
+                            }}
                         >
                             {callResultOptions.map((option) => (
                                 <MenuItem key={option} value={option}>
@@ -229,7 +237,12 @@ export default function CallsContactsResultsTable({ selectedId }) {
                             variant="text"
                             onClick={handleClearFilters}
                             disabled={!hasActiveFilters}
-                            sx={{ fontWeight: 700, whiteSpace: "nowrap" }}
+                            sx={{
+                                fontWeight: 700,
+                                whiteSpace: "nowrap",
+                                flexShrink: 0,
+                                alignSelf: { xs: "stretch", md: "center" },
+                            }}
                         >
                             Limpiar filtros
                         </Button>
@@ -301,8 +314,8 @@ export default function CallsContactsResultsTable({ selectedId }) {
                                         >
                                             {filteredRows.length > 0
                                                 ? Math.round(
-                                                      (contactadosCount / filteredRows.length) * 100
-                                                  )
+                                                    (contactadosCount / filteredRows.length) * 100
+                                                )
                                                 : 0}
                                             %
                                         </Typography>

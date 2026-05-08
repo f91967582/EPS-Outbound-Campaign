@@ -50,6 +50,17 @@ export default function CampaignBasicInfo({
     }
   };
 
+  const allowedFlowNames = [
+  "Bienvenida y activación de clientes recién inscritos.",
+  "Notificación a clientes usando dirección incorrecta para sus envíos.",
+  "Notificación a clientes no han sacado el RUA.",
+  "Notificación a clientes con paquetes en almacén de muchos días.",
+];
+
+const visibleFlows = flows.filter((flow) =>
+  allowedFlowNames.includes(flow.name)
+);
+
   return (
     <Stack spacing={3} sx={{ mt: 1 }}>
       {/* Campaign Title Field */}
@@ -100,12 +111,12 @@ export default function CampaignBasicInfo({
             </InputAdornment>
           }
         >
-          {flows.map((f) => (
+          {visibleFlows.map((f) => (
             <MenuItem key={f.id} value={f.id} sx={{ fontWeight: 500 }}>
               {f.name}
             </MenuItem>
           ))}
-          {flows.length === 0 && !flowsLoading && (
+          {visibleFlows.length === 0 && !flowsLoading && (
             <MenuItem disabled>No se encontraron flujos</MenuItem>
           )}
         </Select>
