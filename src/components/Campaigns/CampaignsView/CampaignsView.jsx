@@ -161,6 +161,7 @@ export default function CampaignsView() {
             alignItems: "flex-start",
           }}
         >
+
           <Box sx={{ minWidth: 0 }}>
             <Stack spacing={3}>
               <Box>
@@ -183,6 +184,33 @@ export default function CampaignsView() {
                   selectedId={selectedSource === "voice" ? selectedId : null}
                   onSelect={(id) => {
                     setSelectedSource("voice");
+                    setSelectedId(id);
+                  }}
+                />
+              </Box>
+
+              <Divider />
+
+              <Box>
+                <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
+                  <WhatsAppIcon sx={{ fontSize: 18, color: "success.main" }} />
+                  <Typography variant="overline" fontWeight={800} sx={{ flexGrow: 1 }}>
+                    Campañas WhatsApp
+                  </Typography>
+                  <Chip
+                    label={whatsappCampaigns.length}
+                    size="small"
+                    variant="outlined"
+                    sx={{ height: 18, fontSize: "0.65rem" }}
+                  />
+                </Stack>
+
+                <WhatsappCampaignList
+                  campaigns={whatsappCampaigns}
+                  loading={loadingWhatsappList}
+                  selectedId={selectedSource === "whatsapp" ? selectedId : null}
+                  onSelect={(id) => {
+                    setSelectedSource("whatsapp");
                     setSelectedId(id);
                   }}
                 />

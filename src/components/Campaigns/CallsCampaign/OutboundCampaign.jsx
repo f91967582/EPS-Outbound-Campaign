@@ -129,7 +129,7 @@ export default function OutboundCampaign() {
         flowName,
         campaignType: "voz",
         maxAttempts,
-        setCallIntervalSeconds,
+        callIntervalSeconds,
         maxConcurrentCalls: processAllSimultaneously ? null : maxConcurrentCalls,
         processAllSimultaneously,
       });

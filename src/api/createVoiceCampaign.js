@@ -32,6 +32,7 @@ export async function createVoiceCampaign({
       messageTemplate,
     }),
   });
+  console.log("callIntervalSeconds before saving:", callIntervalSeconds);
 
   if (!response.ok) {
     const text = await response.text();

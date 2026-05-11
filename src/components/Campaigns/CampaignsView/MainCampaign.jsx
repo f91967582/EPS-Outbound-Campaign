@@ -56,23 +56,23 @@ function MainCampaign() {
           onChange={(e) => setCampaignType(e.target.value)}
           sx={{ fontWeight: 600 }}
         >
-          <MenuItem value="voz">
+         {/* <MenuItem value="voz">
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <CampaignIcon fontSize="small" color="primary" />
               <Typography variant="body2" fontWeight={600}>
                 Voz
               </Typography>
             </Box>
-          </MenuItem>
+          </MenuItem>*/}
 
-          {/* <MenuItem value="whatsapp">
+           <MenuItem value="whatsapp">
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <WhatsAppIcon fontSize="small" sx={{ color: "#25D366" }} />
               <Typography variant="body2" fontWeight={600}>
                 WhatsApp
               </Typography>
             </Box>
-          </MenuItem> */}
+          </MenuItem> 
         </Select>
       </FormControl>
 
