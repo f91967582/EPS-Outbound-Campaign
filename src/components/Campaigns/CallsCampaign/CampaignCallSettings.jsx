@@ -23,6 +23,7 @@ import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 export default function CampaignCallSettings({
   maxAttempts,
   setMaxAttempts,
+  callIntervalSeconds,
   setCallIntervalSeconds,
   maxConcurrentCalls,
   setMaxConcurrentCalls,
@@ -86,7 +87,7 @@ export default function CampaignCallSettings({
             label="Espera entre intentos"
             type="number"
             size="small"
-            value={setCallIntervalSeconds}
+            value={callIntervalSeconds}
             onChange={(e) => setCallIntervalSeconds(Number(e.target.value))}
             inputProps={{ min: 1 }}
             sx={fieldStyles}
