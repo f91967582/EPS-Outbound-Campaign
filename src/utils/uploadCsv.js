@@ -80,6 +80,8 @@ function normalizeHeader(h) {
     .toLowerCase()
     .trim()
     .replace(/^\uFEFF/, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, "")
     .replace(/[_-]/g, "");
 }
@@ -98,6 +100,10 @@ export const OUTBOUND_HEADER_MAP = {
   telefono: "telefono",
   nombre: "nombre",
   correo: "correo",
+
+  codigo: "codigo",
+  cidigo: "codigo",
+  oficina: "oficina",
 };
 
 export const EMAIL_HEADER_MAP = OUTBOUND_HEADER_MAP;

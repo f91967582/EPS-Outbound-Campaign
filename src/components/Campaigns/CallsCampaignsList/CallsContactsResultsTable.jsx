@@ -60,41 +60,78 @@ export default function CallsContactsResultsTable({ selectedId }) {
         return "default";
     };
 
+    const getRawCallResult = (row) =>
+        row?.lastCallStatus || row?.finalStatus || row?.outboundCallStatus || "";
+
+    const getCallResult = (row) => {
+        const status = String(getRawCallResult(row) || "").toUpperCase();
+
+        if (status === "ANSWERED" || status === "COMPLETED") {
+            return "CONTESTADA";
+        }
+
+        return status;
+    };
+
     const isContactado = (row) => {
-        const status = String(
-            row?.finalStatus || row?.lastCallStatus || row?.outboundCallStatus || ""
-        ).toUpperCase();
+        const status = String(getRawCallResult(row) || "").toUpperCase();
 
         return status === "ANSWERED" || status === "COMPLETED";
     };
 
-    const getCallResult = (row) =>
-        row?.lastCallStatus || row?.finalStatus || row?.outboundCallStatus || "";
+
+
+    const uniqueRows = useMemo(() => {
+        const seen = new Set();
+
+        return rows.filter((row, index) => {
+            const key = [
+                row?.campaignId || selectedId || "",
+                row?.contactId || "",
+                row?.phoneNumber || "",
+            ].join("#");
+
+            const fallbackKey = `${index}-${JSON.stringify(row)}`;
+            const finalKey = key.replace(/#/g, "") ? key : fallbackKey;
+
+            if (seen.has(finalKey)) return false;
+
+            seen.add(finalKey);
+            return true;
+        });
+    }, [rows, selectedId]);
 
     const callResultOptions = useMemo(() => {
-        const values = rows
-            .map(getCallResult)
-            .filter(Boolean);
-
+        const values = uniqueRows.map(getCallResult).filter(Boolean);
         return ["ALL", ...Array.from(new Set(values))];
-    }, [rows]);
+    }, [uniqueRows]);
 
     const filteredRows = useMemo(() => {
         const q = search.trim().toLowerCase();
 
-        return rows.filter((row) => {
-            const contactId = String(row?.contactId || "").toLowerCase();
+        return uniqueRows.filter((row) => {
+            const searchableText = [
+                row?.contactId,
+                row?.phoneNumber,
+                row?.nombre,
+                row?.correo,
+                row?.codigo,
+                row?.oficina,
+            ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+
             const callResult = String(getCallResult(row) || "");
 
-            const matchesSearch = !q || contactId.includes(q);
+            const matchesSearch = !q || searchableText.includes(q);
 
             const matchesCallResult =
-                callResultFilter === "ALL" ||
-                callResult === callResultFilter;
+                callResultFilter === "ALL" || callResult === callResultFilter;
 
             return matchesSearch && matchesCallResult;
         });
-    }, [rows, search, callResultFilter]);
+    }, [uniqueRows, search, callResultFilter]);
 
     const chartData = useMemo(() => {
         const contactados = filteredRows.filter(isContactado).length;
@@ -125,24 +162,35 @@ export default function CallsContactsResultsTable({ selectedId }) {
     };
 
     const csvColumns = [
-        { key: "__index", label: "#" },
-        { key: "contactId", label: "Contacto" },
-        { key: "processingStatus", label: "Estado proceso" },
-        { key: "lastCallStatus", label: "Último estado llamada" },
-        { key: "finalStatus", label: "Estado final" },
+        { key: "contactId", label: "CONTACTO" },
+        { key: "nombre", label: "NOMBRE" },
+        { key: "correo", label: "CORREO" },
+        { key: "codigo", label: "CÓDIGO" },
+        { key: "oficina", label: "OFICINA" },
+        { key: "callResult", label: "RESULTADO LLAMADA" },
     ];
 
     const handleDownloadCsv = () => {
+        const exportRows = filteredRows.map((row) => ({
+            ...row,
+            callResult: getCallResult(row),
+        }));
+
         downloadCsv(
             `contactos-campana-${selectedId || "resultados"}.csv`,
             csvColumns,
-            filteredRows
+            exportRows
         );
     };
 
     const handleClearFilters = () => {
         setSearch("");
         setCallResultFilter("ALL");
+    };
+
+    const handleLoadMore = () => {
+        if (loading || !nextToken) return;
+        loadMore();
     };
 
     return (
@@ -169,10 +217,10 @@ export default function CallsContactsResultsTable({ selectedId }) {
                         </Typography>
 
                         <Chip
-                            label={`${filteredRows.length}/${rows.length}`}
+                            label={`${filteredRows.length}/${uniqueRows.length}`}
                             size="small"
                             color="primary"
-                            variant="soft"
+                            variant="outlined"
                             sx={{
                                 height: 20,
                                 fontSize: "0.7rem",
@@ -197,7 +245,6 @@ export default function CallsContactsResultsTable({ selectedId }) {
                     variant="outlined"
                     sx={{ p: 2, mb: 3, borderRadius: 3, bgcolor: "grey.50" }}
                 >
-
                     <Stack
                         direction={{ xs: "column", md: "row" }}
                         spacing={2}
@@ -205,7 +252,7 @@ export default function CallsContactsResultsTable({ selectedId }) {
                         sx={{ width: "100%" }}
                     >
                         <TextField
-                            label="Buscar contacto"
+                            label="Buscar contacto, código u oficina"
                             size="small"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -351,7 +398,10 @@ export default function CallsContactsResultsTable({ selectedId }) {
                                 <TableHead>
                                     <TableRow>
                                         <TableCell sx={headCellSx}>CONTACTO</TableCell>
-                                        <TableCell sx={headCellSx}>ESTADO PROCESO</TableCell>
+                                        <TableCell sx={headCellSx}>NOMBRE</TableCell>
+                                        <TableCell sx={headCellSx}>CORREO</TableCell>
+                                        <TableCell sx={headCellSx}>CÓDIGO</TableCell>
+                                        <TableCell sx={headCellSx}>OFICINA</TableCell>
                                         <TableCell sx={headCellSx}>RESULTADO LLAMADA</TableCell>
                                         <TableCell sx={headCellSx} align="center">
                                             INTENTOS
@@ -373,19 +423,19 @@ export default function CallsContactsResultsTable({ selectedId }) {
                                                     {show(r?.contactId)}
                                                 </TableCell>
 
+                                                <TableCell>{show(r?.nombre)}</TableCell>
+
+                                                <TableCell>{show(r?.correo)}</TableCell>
+
                                                 <TableCell>
-                                                    <Chip
-                                                        label={show(r?.processingStatus)}
-                                                        size="small"
-                                                        variant="outlined"
-                                                        color={getStatusColor(r?.processingStatus)}
-                                                        sx={{
-                                                            fontWeight: 600,
-                                                            textTransform: "uppercase",
-                                                            fontSize: "0.65rem",
-                                                        }}
-                                                    />
+                                                    <Typography variant="body2" fontWeight={700}>
+                                                        {show(r?.codigo)}
+                                                    </Typography>
                                                 </TableCell>
+
+                                                <TableCell>{show(r?.oficina)}</TableCell>
+
+
 
                                                 <TableCell>
                                                     <Typography
@@ -416,7 +466,7 @@ export default function CallsContactsResultsTable({ selectedId }) {
 
                                     {filteredRows.length === 0 && (
                                         <TableRow>
-                                            <TableCell colSpan={4} align="center" sx={{ py: 6 }}>
+                                            <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
                                                 <SearchOffIcon
                                                     sx={{
                                                         color: "text.disabled",
@@ -426,7 +476,7 @@ export default function CallsContactsResultsTable({ selectedId }) {
                                                 />
 
                                                 <Typography variant="body2" color="text.secondary">
-                                                    {rows.length === 0
+                                                    {uniqueRows.length === 0
                                                         ? "No se encontraron registros para esta campaña."
                                                         : "No se encontraron registros con los filtros seleccionados."}
                                                 </Typography>
@@ -441,7 +491,8 @@ export default function CallsContactsResultsTable({ selectedId }) {
                             {nextToken ? (
                                 <Button
                                     variant="contained"
-                                    onClick={loadMore}
+                                    onClick={handleLoadMore}
+                                    disabled={loading || !nextToken}
                                     disableElevation
                                     sx={{ borderRadius: 2, px: 4, fontWeight: 700 }}
                                 >
