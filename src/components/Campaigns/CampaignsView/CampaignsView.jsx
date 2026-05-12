@@ -1,32 +1,30 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Alert,
   Box,
   Container,
-  Grid,
   Typography,
   Stack,
   Chip,
-  Divider,
   alpha,
   useTheme,
 } from "@mui/material";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import CallIcon from "@mui/icons-material/Call";
-import WhatsAppIcon from "@mui/icons-material/WhatsApp";
+// import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 
 import { useCampaignsList, useCampaignDetail } from "../../../services/useCampaignsApi";
-import { useWhatsappCampaignsList } from "../../../hooks/useWhatsappCampaignsList";
+// import { useWhatsappCampaignsList } from "../../../hooks/useWhatsappCampaignsList";
 import { resumeCampaign } from "../../../api/resumeCampaign";
 import { pauseCampaign } from "../../../api/pauseCampaign";
 
 import CallsCampaignList from "../CallsCampaignsList/CallsCampaignList";
-import WhatsappCampaignList from "../WhatsappCampaignsList/WhatsappCampaignList";
+// import WhatsappCampaignList from "../WhatsappCampaignsList/WhatsappCampaignList";
 import CallsCampaignDetailsCard from "../CallsCampaignsList/CallsCampaignDetailsCard";
-import WhatsappCampaignDetailsCard from "../WhatsappCampaignsList/WhatsappCampaignDetailsCard";
+// import WhatsappCampaignDetailsCard from "../WhatsappCampaignsList/WhatsappCampaignDetailsCard";
 import CallsContactsResultsTable from "../CallsCampaignsList/CallsContactsResultsTable";
-import WhatsappContactsResultsTable from "../WhatsappCampaignsList/WhatsappContactsResultsTable";
+// import WhatsappContactsResultsTable from "../WhatsappCampaignsList/WhatsappContactsResultsTable";
 
 export default function CampaignsView() {
   const theme = useTheme();
@@ -43,11 +41,13 @@ export default function CampaignsView() {
     error: listError,
   } = useCampaignsList();
 
+  /*
   const {
     campaigns: whatsappCampaigns = [],
     loading: loadingWhatsappList,
     error: whatsappListError,
   } = useWhatsappCampaignsList();
+  */
 
   const {
     campaign,
@@ -58,13 +58,19 @@ export default function CampaignsView() {
     loadMore,
   } = useCampaignDetail(selectedSource === "voice" ? selectedId : null);
 
+  /*
   const selectedWhatsappCampaign = useMemo(
     () => whatsappCampaigns.find((c) => c.campaignId === selectedId) || null,
     [whatsappCampaigns, selectedId]
   );
+  */
 
+  /*
   const activeCampaign =
     selectedSource === "whatsapp" ? selectedWhatsappCampaign : campaign;
+  */
+
+  const activeCampaign = campaign;
 
   const currentStatus = statusOverride || activeCampaign?.status || "UNKNOWN";
 
@@ -117,7 +123,8 @@ export default function CampaignsView() {
     }
   };
 
-  const combinedError = listError || whatsappListError || detailError;
+  // const combinedError = listError || whatsappListError || detailError;
+  const combinedError = listError || detailError;
 
   return (
     <Box sx={{ bgcolor: alpha(theme.palette.grey[100], 0.4), minHeight: "100vh" }}>
@@ -161,7 +168,6 @@ export default function CampaignsView() {
             alignItems: "flex-start",
           }}
         >
-
           <Box sx={{ minWidth: 0 }}>
             <Stack spacing={3}>
               <Box>
@@ -189,6 +195,7 @@ export default function CampaignsView() {
                 />
               </Box>
 
+              {/*
               <Divider />
 
               <Box>
@@ -215,6 +222,7 @@ export default function CampaignsView() {
                   }}
                 />
               </Box>
+              */}
             </Stack>
           </Box>
 
@@ -237,24 +245,6 @@ export default function CampaignsView() {
                   Selecciona una campaña para ver el detalle.
                 </Typography>
               </Box>
-            ) : selectedSource === "whatsapp" ? (
-              <Stack spacing={3} sx={{ minWidth: 0 }}>
-                <WhatsappCampaignDetailsCard
-                  selectedId={selectedId}
-                  loading={loadingWhatsappList && !selectedWhatsappCampaign}
-                  campaign={selectedWhatsappCampaign}
-                  currentStatus={currentStatus}
-                  getStatusColor={getStatusColor}
-                  handlePause={handlePause}
-                  handleResume={handleResume}
-                  pausing={pausing}
-                  resuming={resuming}
-                />
-
-                {selectedWhatsappCampaign && (
-                  <WhatsappContactsResultsTable selectedId={selectedId} />
-                )}
-              </Stack>
             ) : (
               <Stack spacing={3} sx={{ minWidth: 0 }}>
                 <CallsCampaignDetailsCard
@@ -277,6 +267,30 @@ export default function CampaignsView() {
                 )}
               </Stack>
             )}
+
+            {/*
+            WhatsApp details section commented out:
+
+            selectedSource === "whatsapp" ? (
+              <Stack spacing={3} sx={{ minWidth: 0 }}>
+                <WhatsappCampaignDetailsCard
+                  selectedId={selectedId}
+                  loading={loadingWhatsappList && !selectedWhatsappCampaign}
+                  campaign={selectedWhatsappCampaign}
+                  currentStatus={currentStatus}
+                  getStatusColor={getStatusColor}
+                  handlePause={handlePause}
+                  handleResume={handleResume}
+                  pausing={pausing}
+                  resuming={resuming}
+                />
+
+                {selectedWhatsappCampaign && (
+                  <WhatsappContactsResultsTable selectedId={selectedId} />
+                )}
+              </Stack>
+            ) : ...
+            */}
           </Box>
         </Box>
       </Container>
