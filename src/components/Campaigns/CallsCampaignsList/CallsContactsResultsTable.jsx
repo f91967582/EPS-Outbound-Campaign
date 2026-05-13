@@ -162,18 +162,12 @@ export default function CallsContactsResultsTable({ selectedId }) {
     };
 
     const csvColumns = [
-        { key: "contactId", label: "CONTACTO" },
-        { key: "nombre", label: "NOMBRE" },
-        { key: "correo", label: "CORREO" },
-        { key: "codigo", label: "CÓDIGO" },
-        { key: "oficina", label: "OFICINA" },
-        { key: "callResult", label: "RESULTADO LLAMADA" },
+        { key: "contactId", label: "Telefono" },
     ];
 
     const handleDownloadCsv = () => {
         const exportRows = filteredRows.map((row) => ({
-            ...row,
-            callResult: getCallResult(row),
+            contactId: row?.contactId || "",
         }));
 
         downloadCsv(

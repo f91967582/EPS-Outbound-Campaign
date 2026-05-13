@@ -29,10 +29,12 @@ export default function CampaignCallSettings({
   setMaxConcurrentCalls,
   processAllSimultaneously,
   setProcessAllSimultaneously,
+  campaignMode,
+  setCampaignMode,
 }) {
   const theme = useTheme();
 
-  const isBotMode = processAllSimultaneously;
+  const isBotMode = campaignMode === "bot";
 
   const fieldStyles = {
     "& .MuiOutlinedInput-root": {
@@ -107,7 +109,7 @@ export default function CampaignCallSettings({
             }}
           />
 
-          {!isBotMode && (
+          {!processAllSimultaneously && (
             <TextField
               label="Llamadas simultaneas"
               type="number"
@@ -127,6 +129,75 @@ export default function CampaignCallSettings({
           )}
         </Stack>
 
+
+
+
+
+        {/* Process all simultaneously: always visible */}
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 3,
+            bgcolor: processAllSimultaneously
+              ? alpha(theme.palette.info.main, 0.06)
+              : alpha(theme.palette.success.main, 0.06),
+            border: "1px solid",
+            borderColor: processAllSimultaneously
+              ? alpha(theme.palette.info.main, 0.2)
+              : alpha(theme.palette.success.main, 0.2),
+            transition: "all 0.3s ease",
+          }}
+        >
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            justifyContent="space-between"
+            spacing={2}
+          >
+            <FormControlLabel
+              sx={{ m: 0 }}
+              control={
+                <Switch
+                  checked={processAllSimultaneously}
+                  onChange={(e) =>
+                    setProcessAllSimultaneously(e.target.checked)
+                  }
+                  color="primary"
+                />
+              }
+              label={
+                <Box>
+                  <Typography variant="body2" fontWeight={800}>
+                    Procesar todas al mismo tiempo
+                  </Typography>
+
+                  <Typography variant="caption" color="text.secondary">
+                    {processAllSimultaneously
+                      ? "Ignora el limite de llamadas simultaneas y procesa todos los contactos pendientes."
+                      : "Usa el limite de llamadas simultaneas configurado."}
+                  </Typography>
+                </Box>
+              }
+            />
+
+            <Chip
+              size="small"
+              label={
+                processAllSimultaneously
+                  ? "Todas a la vez"
+                  : `${maxConcurrentCalls || 0} por tanda`
+              }
+              color={processAllSimultaneously ? "info" : "success"}
+              variant="outlined"
+              sx={{
+                fontWeight: 700,
+                borderRadius: 2,
+              }}
+            />
+          </Stack>
+        </Box>
+
+        {/* Campaign mode: bot vs agent */}
         <Box
           sx={{
             p: 2,
@@ -153,7 +224,7 @@ export default function CampaignCallSettings({
                 <Switch
                   checked={isBotMode}
                   onChange={(e) =>
-                    setProcessAllSimultaneously(e.target.checked)
+                    setCampaignMode(e.target.checked ? "bot" : "agent")
                   }
                   color="primary"
                 />
@@ -188,8 +259,8 @@ export default function CampaignCallSettings({
 
                     <Typography variant="caption" color="text.secondary">
                       {isBotMode
-                        ? "Todas las llamadas se procesaran al mismo tiempo."
-                        : "Usa el limite de llamadas simultaneas configurado."}
+                        ? "No revisa disponibilidad de agentes antes de marcar."
+                        : "Revisa disponibilidad de agentes antes de marcar."}
                     </Typography>
                   </Box>
                 </Stack>
@@ -198,7 +269,7 @@ export default function CampaignCallSettings({
 
             <Chip
               size="small"
-              label={isBotMode ? "Marcación masiva" : "Marcación controlada"}
+              label={isBotMode ? "Sin agentes" : "Con agentes"}
               color={isBotMode ? "primary" : "warning"}
               variant="outlined"
               sx={{
@@ -208,6 +279,8 @@ export default function CampaignCallSettings({
             />
           </Stack>
         </Box>
+
+
       </Stack>
     </Box>
   );

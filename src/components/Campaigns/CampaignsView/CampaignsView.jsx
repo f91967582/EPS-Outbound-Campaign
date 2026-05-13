@@ -6,6 +6,7 @@ import {
   Typography,
   Stack,
   Chip,
+  // Divider,
   alpha,
   useTheme,
 } from "@mui/material";
@@ -51,11 +52,8 @@ export default function CampaignsView() {
 
   const {
     campaign,
-    rows,
-    nextToken,
     loading: loadingDetail,
     error: detailError,
-    loadMore,
   } = useCampaignDetail(selectedSource === "voice" ? selectedId : null);
 
   /*
@@ -141,6 +139,7 @@ export default function CampaignsView() {
           >
             <DashboardIcon fontSize="large" />
           </Box>
+
           <Box>
             <Typography variant="h4" fontWeight={800}>
               Campañas Outbound
@@ -269,8 +268,6 @@ export default function CampaignsView() {
             )}
 
             {/*
-            WhatsApp details section commented out:
-
             selectedSource === "whatsapp" ? (
               <Stack spacing={3} sx={{ minWidth: 0 }}>
                 <WhatsappCampaignDetailsCard
@@ -289,7 +286,9 @@ export default function CampaignsView() {
                   <WhatsappContactsResultsTable selectedId={selectedId} />
                 )}
               </Stack>
-            ) : ...
+            ) : (
+              // Vista de campañas de voz
+            )
             */}
           </Box>
         </Box>

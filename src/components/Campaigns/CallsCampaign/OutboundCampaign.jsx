@@ -56,8 +56,10 @@ export default function OutboundCampaign() {
 
   const [maxAttempts, setMaxAttempts] = useState(3);
   const [callIntervalSeconds, setCallIntervalSeconds] = useState(10);
-  const [maxConcurrentCalls, setMaxConcurrentCalls] = useState(0);
-  const [processAllSimultaneously, setProcessAllSimultaneously] = useState(false);
+  const [maxConcurrentCalls, setMaxConcurrentCalls] = useState(5);
+  const [processAllSimultaneously, setProcessAllSimultaneously] =
+    useState(false);
+  const [campaignMode, setCampaignMode] = useState("bot");
 
   const resetAll = () => {
     setCampaignTitle("");
@@ -75,6 +77,8 @@ export default function OutboundCampaign() {
     setMaxAttempts(3);
     setCallIntervalSeconds(10);
     setMaxConcurrentCalls(5);
+    setProcessAllSimultaneously(false);
+    setCampaignMode("bot");
 
     if (inputRef.current) inputRef.current.value = "";
   };
@@ -130,8 +134,11 @@ export default function OutboundCampaign() {
         campaignType: "voz",
         maxAttempts,
         callIntervalSeconds,
-        maxConcurrentCalls: processAllSimultaneously ? null : maxConcurrentCalls,
+        maxConcurrentCalls: processAllSimultaneously
+          ? null
+          : maxConcurrentCalls,
         processAllSimultaneously,
+        campaignMode,
       });
 
       const newCampaignId = response.campaignId;
@@ -144,7 +151,10 @@ export default function OutboundCampaign() {
         campaignId: newCampaignId,
       };
 
-      const { uploadUrl, key } = await getPresignedUploadUrlCalls(file, metadata);
+      const { uploadUrl, key } = await getPresignedUploadUrlCalls(
+        file,
+        metadata
+      );
 
       await uploadFileToS3(uploadUrl, file);
       setS3Key(key);
@@ -179,7 +189,9 @@ export default function OutboundCampaign() {
 
       await updateCampaignStatus(campaignId, {
         status: "CREATED",
-        ...(hasSchedule ? { startAt, timezone } : { startAt: null, timezone: null }),
+        ...(hasSchedule
+          ? { startAt, timezone }
+          : { startAt: null, timezone: null }),
       });
 
       await startVoiceCampaign({
@@ -218,11 +230,20 @@ export default function OutboundCampaign() {
     >
       <CardHeader
         avatar={
-          <Avatar sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.1), color: "secondary.main" }}>
+          <Avatar
+            sx={{
+              bgcolor: alpha(theme.palette.secondary.main, 0.1),
+              color: "secondary.main",
+            }}
+          >
             <SettingsPhoneIcon />
           </Avatar>
         }
-        title={<Typography variant="h6" fontWeight={800}>Nueva Campaña Voz</Typography>}
+        title={
+          <Typography variant="h6" fontWeight={800}>
+            Nueva Campaña Voz
+          </Typography>
+        }
         subheader="Configura la lógica de llamadas y carga la base de datos"
         action={
           s3Key ? (
@@ -249,11 +270,14 @@ export default function OutboundCampaign() {
           <CampaignCallSettings
             maxAttempts={maxAttempts}
             setMaxAttempts={setMaxAttempts}
+            callIntervalSeconds={callIntervalSeconds}
             setCallIntervalSeconds={setCallIntervalSeconds}
             maxConcurrentCalls={maxConcurrentCalls}
             setMaxConcurrentCalls={setMaxConcurrentCalls}
             processAllSimultaneously={processAllSimultaneously}
             setProcessAllSimultaneously={setProcessAllSimultaneously}
+            campaignMode={campaignMode}
+            setCampaignMode={setCampaignMode}
           />
 
           <CampaignSchedule

@@ -85,6 +85,9 @@ export default function CallsCampaignDetailsCard({
     return String(value);
   };
 
+  const campaignMode = campaign?.campaignMode || "bot";
+  const isAgentMode = campaignMode === "agent";
+  const processAll = Boolean(campaign?.processAllSimultaneously);
 
   return (
     <Card
@@ -314,30 +317,41 @@ export default function CallsCampaignDetailsCard({
                 </Typography>
 
                 <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                  Intentos max:{" "}
+                  Modo:{" "}
+                  <Box component="span" color="text.primary" fontWeight={700}>
+                    {isAgentMode ? "Modo agente" : "Modo bot"}
+                  </Box>
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                  Validación de agentes:{" "}
+                  <Box component="span" color="text.primary" fontWeight={700}>
+                    {isAgentMode
+                      ? "Sí, revisa disponibilidad"
+                      : "No, marca sin revisar agentes"}
+                  </Box>
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                  Estrategia de marcación:{" "}
+                  <Box component="span" color="text.primary" fontWeight={700}>
+                    {processAll
+                      ? "Todas las llamadas pendientes a la vez"
+                      : `${show(campaign.maxConcurrentCalls)} por tanda`}
+                  </Box>
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                  Intervalo entre tandas:{" "}
+                  <Box component="span" color="text.primary" fontWeight={700}>
+                    {show(campaign.callIntervalSeconds)} min
+                  </Box>
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                  Intentos máximos:{" "}
                   <Box component="span" color="text.primary" fontWeight={700}>
                     {show(campaign.maxAttempts)}
-                  </Box>
-                </Typography>
-
-                <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                  Intervalo:{" "}
-                  <Box component="span" color="text.primary" fontWeight={700}>
-                    {show(campaign.callIntervalSeconds)}m
-                  </Box>
-                </Typography>
-
-                <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                  Concurrentes:{" "}
-                  <Box component="span" color="text.primary" fontWeight={700}>
-                    {show(campaign.maxConcurrentCalls)}
-                  </Box>
-                </Typography>
-
-                <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                  Procesar todos:{" "}
-                  <Box component="span" color="text.primary" fontWeight={700}>
-                    {show(campaign.processAllSimultaneously)}
                   </Box>
                 </Typography>
               </Stack>

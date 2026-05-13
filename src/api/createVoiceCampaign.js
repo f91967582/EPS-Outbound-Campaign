@@ -7,6 +7,7 @@ export async function createVoiceCampaign({
   callIntervalSeconds,
   maxConcurrentCalls,
   processAllSimultaneously,
+  campaignMode,
   messageTemplate,
 }) {
   const baseUrl = import.meta.env.VITE_BASE_URL;
@@ -29,10 +30,13 @@ export async function createVoiceCampaign({
       callIntervalSeconds,
       maxConcurrentCalls,
       processAllSimultaneously,
+      campaignMode,
       messageTemplate,
     }),
   });
+
   console.log("callIntervalSeconds before saving:", callIntervalSeconds);
+  console.log("campaignMode before saving:", campaignMode);
 
   if (!response.ok) {
     const text = await response.text();
