@@ -340,6 +340,7 @@ export default function CallsCampaignDetailsCard({
                       : `${show(campaign.maxConcurrentCalls)} por tanda`}
                   </Box>
                 </Typography>
+                
 
                 <Typography variant="body2" color="text.secondary" fontWeight={600}>
                   Intervalo entre tandas:{" "}

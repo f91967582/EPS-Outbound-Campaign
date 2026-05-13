@@ -22,6 +22,7 @@ import {
 
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import DownloadIcon from "@mui/icons-material/Download";
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 import { useCampaignDetail } from "../../../services/useCampaignsApi";
 import { downloadCsv } from "../../../utils/downloadCsv";
@@ -42,9 +43,16 @@ export default function CallsContactsResultsTable({ selectedId }) {
         rows = [],
         nextToken,
         loading = false,
+        loadingMore = false,
         error,
         loadMore,
+        reload,
     } = useCampaignDetail(selectedId);
+
+    const handleRefresh = () => {
+        if (loading || loadingMore || !reload) return;
+        reload();
+    };
 
     const [search, setSearch] = useState("");
     const [callResultFilter, setCallResultFilter] = useState("ALL");
@@ -183,7 +191,7 @@ export default function CallsContactsResultsTable({ selectedId }) {
     };
 
     const handleLoadMore = () => {
-        if (loading || !nextToken) return;
+        if (loading || loadingMore || !nextToken) return;
         loadMore();
     };
 
@@ -223,16 +231,35 @@ export default function CallsContactsResultsTable({ selectedId }) {
                         />
                     </Stack>
 
-                    <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<DownloadIcon />}
-                        onClick={handleDownloadCsv}
-                        disabled={loading || filteredRows.length === 0}
-                        sx={{ borderRadius: 2, fontWeight: 700 }}
-                    >
-                        Descargar CSV
-                    </Button>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={
+                                loading ? (
+                                    <CircularProgress size={14} thickness={5} />
+                                ) : (
+                                    <RefreshIcon />
+                                )
+                            }
+                            onClick={handleRefresh}
+                            disabled={loading || loadingMore}
+                            sx={{ borderRadius: 2, fontWeight: 700 }}
+                        >
+                            {loading ? "Actualizando..." : "Actualizar"}
+                        </Button>
+
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<DownloadIcon />}
+                            onClick={handleDownloadCsv}
+                            disabled={loading || filteredRows.length === 0}
+                            sx={{ borderRadius: 2, fontWeight: 700 }}
+                        >
+                            Descargar CSV
+                        </Button>
+                    </Stack>
                 </Stack>
 
                 <Paper
@@ -486,11 +513,11 @@ export default function CallsContactsResultsTable({ selectedId }) {
                                 <Button
                                     variant="contained"
                                     onClick={handleLoadMore}
-                                    disabled={loading || !nextToken}
+                                    disabled={loading || loadingMore || !nextToken}
                                     disableElevation
                                     sx={{ borderRadius: 2, px: 4, fontWeight: 700 }}
                                 >
-                                    Cargar más registros
+                                    {loadingMore ? "Cargando..." : "Cargar más registros"}
                                 </Button>
                             ) : (
                                 <Typography
