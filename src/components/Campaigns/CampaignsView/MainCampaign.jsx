@@ -65,14 +65,14 @@ function MainCampaign() {
             </Box>
           </MenuItem>
 
-          {/*<MenuItem value="whatsapp">
+          <MenuItem value="whatsapp">
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <WhatsAppIcon fontSize="small" sx={{ color: "#25D366" }} />
               <Typography variant="body2" fontWeight={600}>
                 WhatsApp
               </Typography>
             </Box>
-          </MenuItem> */}
+          </MenuItem> 
           
         </Select>
       </FormControl>

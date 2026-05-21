@@ -49,6 +49,17 @@ export default function CampaignBasicInfoWhatsapp({
     },
   };
 
+  const allowedFlowNames = [
+    "Bienvenida y activación de clientes recién inscritos - Whatsapp.",
+    "Notificación a clientes usando dirección incorrecta para sus envíos - Whatsapp.",
+    "Notificación a clientes no han sacado el RUA - Whatsapp.",
+    "Notificación a clientes con paquetes en almacén de muchos días - Whatsapp.",
+  ];
+
+  const visibleFlows = flows.filter((flow) =>
+    allowedFlowNames.includes(flow.name)
+  );
+
   return (
     <Stack spacing={3} sx={{ mt: 1 }}>
       <TextField
@@ -97,13 +108,14 @@ export default function CampaignBasicInfoWhatsapp({
             </InputAdornment>
           }
         >
-          {flows.map((f) => (
+          {visibleFlows.map((f) => (
             <MenuItem key={f.id} value={f.id} sx={{ fontWeight: 500 }}>
               {f.name}
             </MenuItem>
           ))}
-          {flows.length === 0 && !flowsLoading && (
-            <MenuItem disabled>No se encontraron flujos</MenuItem>
+
+          {visibleFlows.length === 0 && !flowsLoading && (
+            <MenuItem disabled>No se encontraron flujos permitidos</MenuItem>
           )}
         </Select>
       </FormControl>

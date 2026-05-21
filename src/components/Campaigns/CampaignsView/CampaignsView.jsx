@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Alert,
   Box,
@@ -6,25 +6,25 @@ import {
   Typography,
   Stack,
   Chip,
-  // Divider,
+  Divider,
   alpha,
   useTheme,
 } from "@mui/material";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import CallIcon from "@mui/icons-material/Call";
-// import WhatsAppIcon from "@mui/icons-material/WhatsApp";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 
 import { useCampaignsList, useCampaignDetail } from "../../../services/useCampaignsApi";
-// import { useWhatsappCampaignsList } from "../../../hooks/useWhatsappCampaignsList";
+import { useWhatsappCampaignsList } from "../../../hooks/useWhatsappCampaignsList";
 import { updateCampaignStatus } from "../../../api/updateCampaignStatus";
 
 import CallsCampaignList from "../CallsCampaignsList/CallsCampaignList";
-// import WhatsappCampaignList from "../WhatsappCampaignsList/WhatsappCampaignList";
+import WhatsappCampaignList from "../WhatsappCampaignsList/WhatsappCampaignList";
 import CallsCampaignDetailsCard from "../CallsCampaignsList/CallsCampaignDetailsCard";
-// import WhatsappCampaignDetailsCard from "../WhatsappCampaignsList/WhatsappCampaignDetailsCard";
+import WhatsappCampaignDetailsCard from "../WhatsappCampaignsList/WhatsappCampaignDetailsCard";
 import CallsContactsResultsTable from "../CallsCampaignsList/CallsContactsResultsTable";
-// import WhatsappContactsResultsTable from "../WhatsappCampaignsList/WhatsappContactsResultsTable";
+import WhatsappContactsResultsTable from "../WhatsappCampaignsList/WhatsappContactsResultsTable";
 import { startVoiceCampaign } from "../../../api/startVoiceCampaign";
 
 export default function CampaignsView() {
@@ -38,19 +38,18 @@ export default function CampaignsView() {
   const [stopping, setStopping] = useState(false);
 
   const [statusOverride, setStatusOverride] = useState(null);
+
   const {
     campaigns = [],
     loading: loadingList,
     error: listError,
   } = useCampaignsList();
 
-  /*
   const {
     campaigns: whatsappCampaigns = [],
     loading: loadingWhatsappList,
     error: whatsappListError,
   } = useWhatsappCampaignsList();
-  */
 
   const {
     campaign,
@@ -58,26 +57,19 @@ export default function CampaignsView() {
     error: detailError,
   } = useCampaignDetail(selectedSource === "voice" ? selectedId : null);
 
-  /*
   const selectedWhatsappCampaign = useMemo(
     () => whatsappCampaigns.find((c) => c.campaignId === selectedId) || null,
     [whatsappCampaigns, selectedId]
   );
-  */
 
-  /*
   const activeCampaign =
     selectedSource === "whatsapp" ? selectedWhatsappCampaign : campaign;
-  */
-
-  const activeCampaign = campaign;
 
   const currentStatus = statusOverride || activeCampaign?.status || "UNKNOWN";
 
   useEffect(() => {
     setStatusOverride(null);
   }, [selectedId, selectedSource]);
-
 
   const getStatusColor = (status) => {
     switch (String(status || "").toUpperCase()) {
@@ -99,88 +91,87 @@ export default function CampaignsView() {
     }
   };
 
-
   const getReturnedStatus = (result, fallback) =>
     result?.status || result?.attributes?.status || fallback;
 
+  const handlePause = async () => {
+    if (!activeCampaign?.campaignId) return;
 
-const handlePause = async () => {
-  if (!activeCampaign?.campaignId) return;
+    try {
+      setPausing(true);
 
-  try {
-    setPausing(true);
-
-    const result = await updateCampaignStatus(activeCampaign.campaignId, "pause", {
-      reason: "manual pause from dashboard",
-      updatedBy: "admin",
-    });
-
-    setStatusOverride(getReturnedStatus(result, "PAUSED"));
-  } catch (err) {
-    console.error(err);
-  } finally {
-    setPausing(false);
-  }
-};
-
-const handleResume = async () => {
-  if (!activeCampaign?.campaignId) return;
-
-  try {
-    setResuming(true);
-
-    const result = await updateCampaignStatus(activeCampaign.campaignId, "resume", {
-      reason: "manual resume from dashboard",
-      updatedBy: "admin",
-    });
-
-    const resumedStatus =
-      result?.status || result?.attributes?.status || "RUNNING";
-
-    setStatusOverride(resumedStatus);
-
-    // Re-arm the campaign because the previous EventBridge schedule may have
-    // already fired while the campaign was PAUSED.
-    if (["RUNNING", "QUEUED", "SCHEDULED"].includes(resumedStatus)) {
-      await startVoiceCampaign({
-        campaignId: activeCampaign.campaignId,
+      const result = await updateCampaignStatus(activeCampaign.campaignId, "pause", {
+        reason: "manual pause from dashboard",
+        updatedBy: "admin",
       });
+
+      setStatusOverride(getReturnedStatus(result, "PAUSED"));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setPausing(false);
     }
-  } catch (err) {
-    console.error(err);
-  } finally {
-    setResuming(false);
-  }
-};
+  };
 
-const handleStop = async () => {
-  if (!activeCampaign?.campaignId) return;
+  const handleResume = async () => {
+    if (!activeCampaign?.campaignId) return;
 
-  const confirmed = window.confirm(
-    "¿Seguro que quieres detener esta campaña definitivamente? Esta acción no se podrá reanudar."
-  );
+    try {
+      setResuming(true);
 
-  if (!confirmed) return;
+      const result = await updateCampaignStatus(activeCampaign.campaignId, "resume", {
+        reason: "manual resume from dashboard",
+        updatedBy: "admin",
+      });
 
-  try {
-    setStopping(true);
+      const resumedStatus =
+        result?.status || result?.attributes?.status || "RUNNING";
 
-    const result = await updateCampaignStatus(activeCampaign.campaignId, "stop", {
-      reason: "manual stop from dashboard",
-      updatedBy: "admin",
-    });
+      setStatusOverride(resumedStatus);
 
-    setStatusOverride(getReturnedStatus(result, "STOPPED"));
-  } catch (err) {
-    console.error(err);
-  } finally {
-    setStopping(false);
-  }
-};
+      // Solo re-armamos campañas de voz aquí.
+      // Para WhatsApp, si tienes un startWhatsappCampaign API, se puede agregar igual.
+      if (
+        selectedSource === "voice" &&
+        ["RUNNING", "QUEUED", "SCHEDULED"].includes(resumedStatus)
+      ) {
+        await startVoiceCampaign({
+          campaignId: activeCampaign.campaignId,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setResuming(false);
+    }
+  };
 
+  const handleStop = async () => {
+    if (!activeCampaign?.campaignId) return;
 
-  // const combinedError = listError || whatsappListError || detailError;
-  const combinedError = listError || detailError;
+    const confirmed = window.confirm(
+      "¿Seguro que quieres detener esta campaña definitivamente? Esta acción no se podrá reanudar."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setStopping(true);
+
+      const result = await updateCampaignStatus(activeCampaign.campaignId, "stop", {
+        reason: "manual stop from dashboard",
+        updatedBy: "admin",
+      });
+
+      setStatusOverride(getReturnedStatus(result, "STOPPED"));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setStopping(false);
+    }
+  };
+
+  const combinedError = listError || whatsappListError || detailError;
 
   return (
     <Box sx={{ bgcolor: alpha(theme.palette.grey[100], 0.4), minHeight: "100vh" }}>
@@ -252,7 +243,6 @@ const handleStop = async () => {
                 />
               </Box>
 
-              {/*
               <Divider />
 
               <Box>
@@ -279,7 +269,6 @@ const handleStop = async () => {
                   }}
                 />
               </Box>
-              */}
             </Stack>
           </Box>
 
@@ -302,6 +291,26 @@ const handleStop = async () => {
                   Selecciona una campaña para ver el detalle.
                 </Typography>
               </Box>
+            ) : selectedSource === "whatsapp" ? (
+              <Stack spacing={3} sx={{ minWidth: 0 }}>
+                <WhatsappCampaignDetailsCard
+                  selectedId={selectedId}
+                  loading={loadingWhatsappList && !selectedWhatsappCampaign}
+                  campaign={selectedWhatsappCampaign}
+                  currentStatus={currentStatus}
+                  getStatusColor={getStatusColor}
+                  handlePause={handlePause}
+                  handleResume={handleResume}
+                  handleStop={handleStop}
+                  pausing={pausing}
+                  resuming={resuming}
+                  stopping={stopping}
+                />
+
+                {selectedWhatsappCampaign && (
+                  <WhatsappContactsResultsTable selectedId={selectedId} />
+                )}
+              </Stack>
             ) : (
               <Stack spacing={3} sx={{ minWidth: 0 }}>
                 <CallsCampaignDetailsCard
@@ -326,30 +335,6 @@ const handleStop = async () => {
                 )}
               </Stack>
             )}
-
-            {/*
-            selectedSource === "whatsapp" ? (
-              <Stack spacing={3} sx={{ minWidth: 0 }}>
-                <WhatsappCampaignDetailsCard
-                  selectedId={selectedId}
-                  loading={loadingWhatsappList && !selectedWhatsappCampaign}
-                  campaign={selectedWhatsappCampaign}
-                  currentStatus={currentStatus}
-                  getStatusColor={getStatusColor}
-                  handlePause={handlePause}
-                  handleResume={handleResume}
-                  pausing={pausing}
-                  resuming={resuming}
-                />
-
-                {selectedWhatsappCampaign && (
-                  <WhatsappContactsResultsTable selectedId={selectedId} />
-                )}
-              </Stack>
-            ) : (
-              // Vista de campañas de voz
-            )
-            */}
           </Box>
         </Box>
       </Container>
