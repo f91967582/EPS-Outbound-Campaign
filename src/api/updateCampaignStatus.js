@@ -1,14 +1,15 @@
-export async function updateCampaignStatus(campaignId, payload) {
+export async function updateCampaignStatus(campaignId, action, options = {}) {
+  const API_URL = import.meta.env.VITE_BASE_URL.replace(/\/$/, "");
 
-  const baseUrl = `${import.meta.env.VITE_BASE_URL}`;
-
-  const response = await fetch(`${baseUrl}/voice/campaigns/${campaignId}`,
-    {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    }
-  );
+  const response = await fetch(`${API_URL}/voice/campaigns/${campaignId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action, // "pause", "resume", or "stop"
+      reason: options.reason || `manual ${action} from dashboard`,
+      updatedBy: options.updatedBy || "admin",
+    }),
+  });
 
   const text = await response.text();
 
@@ -21,11 +22,11 @@ export async function updateCampaignStatus(campaignId, payload) {
 
   if (!response.ok) {
     throw new Error(
-      `Failed to update campaign (${response.status}): ${body?.message || body?.error || body?.raw || text || "Unknown error"
+      `Failed to update campaign (${response.status}): ${
+        body?.message || body?.error || body?.raw || text || "Unknown error"
       }`
     );
   }
 
-  // If your API returns JSON, prefer the already-parsed body:
   return body;
 }

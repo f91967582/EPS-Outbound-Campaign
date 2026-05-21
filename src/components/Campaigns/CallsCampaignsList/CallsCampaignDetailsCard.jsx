@@ -17,6 +17,7 @@ import {
 import CallIcon from "@mui/icons-material/Call";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseIcon from "@mui/icons-material/Pause";
+import StopCircleIcon from "@mui/icons-material/StopCircle";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import EventIcon from "@mui/icons-material/Event";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -30,8 +31,10 @@ export default function CallsCampaignDetailsCard({
   getStatusColor,
   handlePause,
   handleResume,
+  handleStop,
   pausing,
   resuming,
+  stopping,
 }) {
   const theme = useTheme();
 
@@ -89,6 +92,16 @@ export default function CallsCampaignDetailsCard({
   const isAgentMode = campaignMode === "agent";
   const processAll = Boolean(campaign?.processAllSimultaneously);
 
+  const normalizedStatus = String(currentStatus || campaign?.status || "").toUpperCase();
+
+  const isBusy = Boolean(pausing || resuming || stopping);
+
+  const canPause = ["QUEUED", "SCHEDULED", "RUNNING"].includes(normalizedStatus);
+  const canResume = normalizedStatus === "PAUSED";
+  const canStop = ["QUEUED", "SCHEDULED", "RUNNING", "PAUSED"].includes(
+    normalizedStatus
+  );
+
   return (
     <Card
       elevation={0}
@@ -115,6 +128,7 @@ export default function CallsCampaignDetailsCard({
             >
               <CallIcon />
             </Avatar>
+
             <Box>
               <Typography variant="h6" fontWeight={800} sx={{ lineHeight: 1.2 }}>
                 Detalle de la Campaña de Voz
@@ -126,48 +140,68 @@ export default function CallsCampaignDetailsCard({
           </Stack>
 
           {campaign && (
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              flexWrap="wrap"
+              justifyContent="flex-end"
+            >
               {renderSoftChip(currentStatus, currentStatus)}
 
-              {currentStatus === "RUNNING" && (
-                <Button
-                  variant="contained"
-                  color="warning"
-                  size="small"
-                  onClick={handlePause}
-                  disabled={pausing || resuming}
-                  startIcon={
-                    pausing ? (
-                      <CircularProgress size={14} color="inherit" />
-                    ) : (
-                      <PauseIcon />
-                    )
-                  }
-                  sx={{ borderRadius: 2, fontWeight: 700 }}
-                >
-                  {pausing ? "Pausando..." : "Pausar"}
-                </Button>
-              )}
+              <Button
+                variant="contained"
+                color="warning"
+                size="small"
+                onClick={handlePause}
+                disabled={!canPause || isBusy}
+                startIcon={
+                  pausing ? (
+                    <CircularProgress size={14} color="inherit" />
+                  ) : (
+                    <PauseIcon />
+                  )
+                }
+                sx={{ borderRadius: 2, fontWeight: 700 }}
+              >
+                {pausing ? "Pausando..." : "Pausar"}
+              </Button>
 
-              {currentStatus === "PAUSED" && (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  onClick={handleResume}
-                  disabled={resuming || pausing}
-                  startIcon={
-                    resuming ? (
-                      <CircularProgress size={14} color="inherit" />
-                    ) : (
-                      <PlayArrowIcon />
-                    )
-                  }
-                  sx={{ borderRadius: 2, fontWeight: 700 }}
-                >
-                  {resuming ? "Reanudando..." : "Reanudar"}
-                </Button>
-              )}
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={handleResume}
+                disabled={!canResume || isBusy}
+                startIcon={
+                  resuming ? (
+                    <CircularProgress size={14} color="inherit" />
+                  ) : (
+                    <PlayArrowIcon />
+                  )
+                }
+                sx={{ borderRadius: 2, fontWeight: 700 }}
+              >
+                {resuming ? "Reanudando..." : "Reanudar"}
+              </Button>
+
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                onClick={handleStop}
+                disabled={!canStop || isBusy}
+                startIcon={
+                  stopping ? (
+                    <CircularProgress size={14} color="inherit" />
+                  ) : (
+                    <StopCircleIcon />
+                  )
+                }
+                sx={{ borderRadius: 2, fontWeight: 700 }}
+              >
+                {stopping ? "Deteniendo..." : "Detener"}
+              </Button>
             </Stack>
           )}
         </Stack>
@@ -294,7 +328,7 @@ export default function CallsCampaignDetailsCard({
                 <Typography variant="body2" color="text.secondary" fontWeight={600}>
                   Estado:{" "}
                   <Box component="span" color="text.primary" fontWeight={700}>
-                    {show(campaign.status)}
+                    {show(currentStatus || campaign.status)}
                   </Box>
                 </Typography>
               </Stack>
@@ -340,7 +374,6 @@ export default function CallsCampaignDetailsCard({
                       : `${show(campaign.maxConcurrentCalls)} por tanda`}
                   </Box>
                 </Typography>
-                
 
                 <Typography variant="body2" color="text.secondary" fontWeight={600}>
                   Intervalo entre tandas:{" "}

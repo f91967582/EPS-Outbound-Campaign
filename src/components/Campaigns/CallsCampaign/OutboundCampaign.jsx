@@ -23,7 +23,7 @@ import { uploadCsv, OUTBOUND_HEADER_MAP } from "../../../utils/uploadCsv";
 import { getPresignedUploadUrlCalls } from "../../../api/getPresignedUploadUrlCalls";
 import uploadFileToS3 from "../../../utils/uploadFileToS3";
 import { createVoiceCampaign } from "../../../api/createVoiceCampaign";
-import { updateCampaignStatus } from "../../../api/updateCampaignStatus";
+import { updateVoiceCampaignUpload } from "../../../api/updateVoiceCampaignUpload";
 import { startVoiceCampaign } from "../../../api/startVoiceCampaign";
 
 import CampaignBasicInfo from "./CampaignBasicInfo";
@@ -159,7 +159,7 @@ export default function OutboundCampaign() {
       await uploadFileToS3(uploadUrl, file);
       setS3Key(key);
 
-      await updateCampaignStatus(newCampaignId, {
+      await updateVoiceCampaignUpload(newCampaignId, {
         bucket: "csvfile-upload-react-dashboard-calls",
         s3Key: key,
       });
@@ -186,13 +186,6 @@ export default function OutboundCampaign() {
       setStarting(true);
 
       const startAt = hasSchedule ? `${startDate}T${startTime}:00` : null;
-
-      await updateCampaignStatus(campaignId, {
-        status: "CREATED",
-        ...(hasSchedule
-          ? { startAt, timezone }
-          : { startAt: null, timezone: null }),
-      });
 
       await startVoiceCampaign({
         campaignId,

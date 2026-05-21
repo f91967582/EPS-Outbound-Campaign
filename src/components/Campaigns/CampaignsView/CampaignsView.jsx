@@ -17,8 +17,7 @@ import CallIcon from "@mui/icons-material/Call";
 
 import { useCampaignsList, useCampaignDetail } from "../../../services/useCampaignsApi";
 // import { useWhatsappCampaignsList } from "../../../hooks/useWhatsappCampaignsList";
-import { resumeCampaign } from "../../../api/resumeCampaign";
-import { pauseCampaign } from "../../../api/pauseCampaign";
+import { updateCampaignStatus } from "../../../api/updateCampaignStatus";
 
 import CallsCampaignList from "../CallsCampaignsList/CallsCampaignList";
 // import WhatsappCampaignList from "../WhatsappCampaignsList/WhatsappCampaignList";
@@ -26,16 +25,19 @@ import CallsCampaignDetailsCard from "../CallsCampaignsList/CallsCampaignDetails
 // import WhatsappCampaignDetailsCard from "../WhatsappCampaignsList/WhatsappCampaignDetailsCard";
 import CallsContactsResultsTable from "../CallsCampaignsList/CallsContactsResultsTable";
 // import WhatsappContactsResultsTable from "../WhatsappCampaignsList/WhatsappContactsResultsTable";
+import { startVoiceCampaign } from "../../../api/startVoiceCampaign";
 
 export default function CampaignsView() {
   const theme = useTheme();
 
   const [selectedId, setSelectedId] = useState(null);
   const [selectedSource, setSelectedSource] = useState(null); // "voice" | "whatsapp"
+
   const [pausing, setPausing] = useState(false);
   const [resuming, setResuming] = useState(false);
-  const [statusOverride, setStatusOverride] = useState(null);
+  const [stopping, setStopping] = useState(false);
 
+  const [statusOverride, setStatusOverride] = useState(null);
   const {
     campaigns = [],
     loading: loadingList,
@@ -76,8 +78,9 @@ export default function CampaignsView() {
     setStatusOverride(null);
   }, [selectedId, selectedSource]);
 
+
   const getStatusColor = (status) => {
-    switch (status) {
+    switch (String(status || "").toUpperCase()) {
       case "COMPLETED":
         return "success";
       case "FAILED":
@@ -85,41 +88,96 @@ export default function CampaignsView() {
       case "RUNNING":
         return "info";
       case "QUEUED":
+      case "SCHEDULED":
         return "warning";
       case "PAUSED":
         return "secondary";
+      case "STOPPED":
+        return "default";
       default:
         return "default";
     }
   };
 
-  const handlePause = async () => {
-    if (!activeCampaign?.campaignId) return;
 
-    try {
-      setPausing(true);
-      await pauseCampaign({ campaignId: activeCampaign.campaignId });
-      setStatusOverride("PAUSED");
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setPausing(false);
+  const getReturnedStatus = (result, fallback) =>
+    result?.status || result?.attributes?.status || fallback;
+
+
+const handlePause = async () => {
+  if (!activeCampaign?.campaignId) return;
+
+  try {
+    setPausing(true);
+
+    const result = await updateCampaignStatus(activeCampaign.campaignId, "pause", {
+      reason: "manual pause from dashboard",
+      updatedBy: "admin",
+    });
+
+    setStatusOverride(getReturnedStatus(result, "PAUSED"));
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setPausing(false);
+  }
+};
+
+const handleResume = async () => {
+  if (!activeCampaign?.campaignId) return;
+
+  try {
+    setResuming(true);
+
+    const result = await updateCampaignStatus(activeCampaign.campaignId, "resume", {
+      reason: "manual resume from dashboard",
+      updatedBy: "admin",
+    });
+
+    const resumedStatus =
+      result?.status || result?.attributes?.status || "RUNNING";
+
+    setStatusOverride(resumedStatus);
+
+    // Re-arm the campaign because the previous EventBridge schedule may have
+    // already fired while the campaign was PAUSED.
+    if (["RUNNING", "QUEUED", "SCHEDULED"].includes(resumedStatus)) {
+      await startVoiceCampaign({
+        campaignId: activeCampaign.campaignId,
+      });
     }
-  };
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setResuming(false);
+  }
+};
 
-  const handleResume = async () => {
-    if (!activeCampaign?.campaignId) return;
+const handleStop = async () => {
+  if (!activeCampaign?.campaignId) return;
 
-    try {
-      setResuming(true);
-      await resumeCampaign({ campaignId: activeCampaign.campaignId });
-      setStatusOverride("QUEUED");
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setResuming(false);
-    }
-  };
+  const confirmed = window.confirm(
+    "¿Seguro que quieres detener esta campaña definitivamente? Esta acción no se podrá reanudar."
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setStopping(true);
+
+    const result = await updateCampaignStatus(activeCampaign.campaignId, "stop", {
+      reason: "manual stop from dashboard",
+      updatedBy: "admin",
+    });
+
+    setStatusOverride(getReturnedStatus(result, "STOPPED"));
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setStopping(false);
+  }
+};
+
 
   // const combinedError = listError || whatsappListError || detailError;
   const combinedError = listError || detailError;
@@ -254,8 +312,10 @@ export default function CampaignsView() {
                   getStatusColor={getStatusColor}
                   handlePause={handlePause}
                   handleResume={handleResume}
+                  handleStop={handleStop}
                   pausing={pausing}
                   resuming={resuming}
+                  stopping={stopping}
                 />
 
                 {campaign && (
