@@ -19,7 +19,10 @@ async function fetchJson(path, { params } = {}) {
   });
 
   const text = await res.text();
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`);
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`);
+  }
 
   try {
     return JSON.parse(text);
@@ -33,8 +36,6 @@ export function apiGetCampaigns() {
   return fetchJson(`/voice/campaigns`);
 }
 
-export function apiGetCampaignDetails(campaignId, { limit = 50, nextToken } = {}) {
-  return fetchJson(`/voice/campaigns/${encodeURIComponent(campaignId)}/details`, {
-    params: { limit, nextToken },
-  });
+export function apiGetCampaignDetails(campaignId) {
+  return fetchJson(`/voice/campaigns/${encodeURIComponent(campaignId)}/details`);
 }

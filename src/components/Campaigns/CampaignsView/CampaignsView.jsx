@@ -5,22 +5,17 @@ import {
   Container,
   Typography,
   Stack,
-  Chip,
-  Divider,
   alpha,
   useTheme,
 } from "@mui/material";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import CallIcon from "@mui/icons-material/Call";
-import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 
 import { useCampaignsList, useCampaignDetail } from "../../../services/useCampaignsApi";
 import { useWhatsappCampaignsList } from "../../../hooks/useWhatsappCampaignsList";
 import { updateCampaignStatus } from "../../../api/updateCampaignStatus";
 
 import CallsCampaignList from "../CallsCampaignsList/CallsCampaignList";
-import WhatsappCampaignList from "../WhatsappCampaignsList/WhatsappCampaignList";
 import CallsCampaignDetailsCard from "../CallsCampaignsList/CallsCampaignDetailsCard";
 import WhatsappCampaignDetailsCard from "../WhatsappCampaignsList/WhatsappCampaignDetailsCard";
 import CallsContactsResultsTable from "../CallsCampaignsList/CallsContactsResultsTable";
@@ -217,59 +212,22 @@ export default function CampaignsView() {
           }}
         >
           <Box sx={{ minWidth: 0 }}>
-            <Stack spacing={3}>
-              <Box>
-                <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
-                  <CallIcon sx={{ fontSize: 18, color: "text.secondary" }} />
-                  <Typography variant="overline" fontWeight={800} sx={{ flexGrow: 1 }}>
-                    Campañas Voz
-                  </Typography>
-                  <Chip
-                    label={campaigns.length}
-                    size="small"
-                    variant="outlined"
-                    sx={{ height: 18, fontSize: "0.65rem" }}
-                  />
-                </Stack>
-
-                <CallsCampaignList
-                  campaigns={campaigns}
-                  loading={loadingList}
-                  selectedId={selectedSource === "voice" ? selectedId : null}
-                  onSelect={(id) => {
-                    setSelectedSource("voice");
-                    setSelectedId(id);
-                  }}
-                />
-              </Box>
-
-              <Divider />
-
-              <Box>
-                <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
-                  <WhatsAppIcon sx={{ fontSize: 18, color: "success.main" }} />
-                  <Typography variant="overline" fontWeight={800} sx={{ flexGrow: 1 }}>
-                    Campañas WhatsApp
-                  </Typography>
-                  <Chip
-                    label={whatsappCampaigns.length}
-                    size="small"
-                    variant="outlined"
-                    sx={{ height: 18, fontSize: "0.65rem" }}
-                  />
-                </Stack>
-
-                <WhatsappCampaignList
-                  campaigns={whatsappCampaigns}
-                  loading={loadingWhatsappList}
-                  selectedId={selectedSource === "whatsapp" ? selectedId : null}
-                  onSelect={(id) => {
-                    setSelectedSource("whatsapp");
-                    setSelectedId(id);
-                  }}
-                />
-              </Box>
-            </Stack>
+            <CallsCampaignList
+              campaigns={campaigns}
+              whatsappCampaigns={whatsappCampaigns}
+              loading={loadingList}
+              loadingWhatsapp={loadingWhatsappList}
+              selectedId={selectedId}
+              selectedSource={selectedSource}
+              onChannelChange={(source) => {
+                setSelectedSource(source);
+                setSelectedId(null);
+              }}
+              onSelect={(id, source) => {
+                setSelectedSource(source);
+                setSelectedId(id);
+              }}
+            />
           </Box>
 
           <Box sx={{ minWidth: 0 }}>

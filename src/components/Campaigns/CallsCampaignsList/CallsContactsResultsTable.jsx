@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     Box,
     Button,
@@ -18,6 +18,7 @@ import {
     useTheme,
     TextField,
     MenuItem,
+    alpha,
 } from "@mui/material";
 
 import SearchOffIcon from "@mui/icons-material/SearchOff";
@@ -36,50 +37,33 @@ import {
     Legend,
 } from "recharts";
 
+const PAGE_SIZE = 25;
+
 export default function CallsContactsResultsTable({ selectedId }) {
     const theme = useTheme();
 
     const {
         rows = [],
-        nextToken,
         loading = false,
-        loadingMore = false,
         error,
-        loadMore,
         reload,
     } = useCampaignDetail(selectedId);
 
-    const handleRefresh = () => {
-        if (loading || loadingMore || !reload) return;
-        reload();
-    };
-
     const [search, setSearch] = useState("");
     const [callResultFilter, setCallResultFilter] = useState("ALL");
+    const [currentPage, setCurrentPage] = useState(1);
 
-    const getStatusColor = (status) => {
-        const s = String(status || "").toUpperCase();
-
-        if (["COMPLETED", "ANSWERED", "PROCESSED"].includes(s)) return "success";
-        if (["IN_PROGRESS", "ACTIVE", "CALLING"].includes(s)) return "info";
-        if (["PENDING", "QUEUED", "BUSY"].includes(s)) return "warning";
-        if (["FAILED", "NO_ANSWER", "REJECTED", "ERROR"].includes(s)) return "error";
-
-        return "default";
+    const handleRefresh = () => {
+        if (loading || !reload) return;
+        reload();
     };
 
     const getRawCallResult = (row) =>
         row?.lastCallStatus || row?.finalStatus || row?.outboundCallStatus || "";
 
-    const getCallResult = (row) => {
-        const status = String(getRawCallResult(row) || "").toUpperCase();
+    const getAttemptsMade = (row) => Number(row?.attemptsMade || 0);
 
-        if (status === "ANSWERED" || status === "COMPLETED") {
-            return "CONTESTADA";
-        }
-
-        return status;
-    };
+    const getMaxAttempts = (row) => Number(row?.maxAttempts || 0);
 
     const isContactado = (row) => {
         const status = String(getRawCallResult(row) || "").toUpperCase();
@@ -87,7 +71,38 @@ export default function CallsContactsResultsTable({ selectedId }) {
         return status === "ANSWERED" || status === "COMPLETED";
     };
 
+    const isPendiente = (row) => {
+        if (isContactado(row)) return false;
 
+        const attemptsMade = getAttemptsMade(row);
+        const maxAttempts = getMaxAttempts(row);
+
+        return maxAttempts > 0 && attemptsMade < maxAttempts;
+    };
+
+    const isNoContestada = (row) => {
+        return !isContactado(row) && !isPendiente(row);
+    };
+
+    const getCallResult = (row) => {
+        if (isContactado(row)) {
+            return "CONTESTADA";
+        }
+
+        if (isPendiente(row)) {
+            return "PENDIENTE";
+        }
+
+        return "NO CONTESTADA";
+    };
+
+    const getCallResultTextColor = (row) => {
+        if (isContactado(row)) return "success.main";
+        if (isPendiente(row)) return "warning.main";
+        if (isNoContestada(row)) return "error.main";
+
+        return "text.primary";
+    };
 
     const uniqueRows = useMemo(() => {
         const seen = new Set();
@@ -110,8 +125,14 @@ export default function CallsContactsResultsTable({ selectedId }) {
     }, [rows, selectedId]);
 
     const callResultOptions = useMemo(() => {
-        const values = uniqueRows.map(getCallResult).filter(Boolean);
-        return ["ALL", ...Array.from(new Set(values))];
+        const availableValues = new Set(uniqueRows.map(getCallResult).filter(Boolean));
+
+        return [
+            "ALL",
+            ...["CONTESTADA", "PENDIENTE", "NO CONTESTADA"].filter((option) =>
+                availableValues.has(option)
+            ),
+        ];
     }, [uniqueRows]);
 
     const filteredRows = useMemo(() => {
@@ -141,26 +162,121 @@ export default function CallsContactsResultsTable({ selectedId }) {
         });
     }, [uniqueRows, search, callResultFilter]);
 
-    const chartData = useMemo(() => {
-        const contactados = filteredRows.filter(isContactado).length;
-        const noContactados = filteredRows.length - contactados;
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedId, search, callResultFilter]);
 
+    const totalPages = useMemo(() => {
+        return Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+    }, [filteredRows.length]);
+
+    const pageNumbers = useMemo(() => {
+        return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }, [totalPages]);
+
+const paginatedRows = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+
+    return filteredRows.slice(start, end);
+}, [filteredRows, currentPage]);
+
+const paginationStart =
+    filteredRows.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+
+const paginationEnd = Math.min(currentPage * PAGE_SIZE, filteredRows.length);
+
+useEffect(() => {
+    console.groupCollapsed("[CallsContactsResultsTable] Results pagination/debug");
+
+    console.log("selectedId:", selectedId);
+    console.log("loading:", loading);
+    console.log("error:", error);
+
+    console.log("rows from hook:", rows.length);
+    console.log("uniqueRows:", uniqueRows.length);
+    console.log("filteredRows:", filteredRows.length);
+
+    console.log("PAGE_SIZE:", PAGE_SIZE);
+    console.log("totalPages:", totalPages);
+    console.log("currentPage:", currentPage);
+    console.log("paginatedRows:", paginatedRows.length);
+
+    console.log("paginationStart:", paginationStart);
+    console.log("paginationEnd:", paginationEnd);
+
+    console.log("first row from hook:", rows[0]);
+    console.log("last row from hook:", rows[rows.length - 1]);
+
+    console.table(
+        rows.slice(0, 10).map((row) => ({
+            contactId: row?.contactId,
+            phoneNumber: row?.phoneNumber,
+            attemptsMade: row?.attemptsMade,
+            maxAttempts: row?.maxAttempts,
+            lastCallStatus: row?.lastCallStatus,
+            finalStatus: row?.finalStatus,
+            outboundCallStatus: row?.outboundCallStatus,
+            normalizedResult: getCallResult(row),
+        }))
+    );
+
+    console.groupEnd();
+}, [
+    selectedId,
+    loading,
+    error,
+    rows.length,
+    uniqueRows.length,
+    filteredRows.length,
+    totalPages,
+    currentPage,
+    paginatedRows.length,
+    paginationStart,
+    paginationEnd,
+]);
+
+    const contactadosCount = useMemo(
+        () => filteredRows.filter(isContactado).length,
+        [filteredRows]
+    );
+
+    const pendientesCount = useMemo(
+        () => filteredRows.filter(isPendiente).length,
+        [filteredRows]
+    );
+
+    const noContestadasCount = useMemo(
+        () => filteredRows.filter(isNoContestada).length,
+        [filteredRows]
+    );
+
+    const chartData = useMemo(() => {
         return [
             {
                 name: "Contactados",
-                value: contactados,
+                value: contactadosCount,
                 color: theme.palette.success.main,
             },
             {
-                name: "No contactados",
-                value: noContactados,
+                name: "No contestadas",
+                value: noContestadasCount,
                 color: theme.palette.error.light,
             },
-        ];
-    }, [filteredRows, theme.palette]);
-
-    const contactadosCount = chartData[0]?.value || 0;
-    const noContactadosCount = chartData[1]?.value || 0;
+            {
+                name: "Pendientes",
+                value: pendientesCount,
+                color: theme.palette.warning.main,
+            },
+        ].filter((item) => item.value > 0);
+    }, [
+        contactadosCount,
+        noContestadasCount,
+        pendientesCount,
+        theme.palette.success.main,
+        theme.palette.error.light,
+        theme.palette.warning.main,
+    ]);
 
     const hasActiveFilters = search.trim() || callResultFilter !== "ALL";
 
@@ -171,11 +287,13 @@ export default function CallsContactsResultsTable({ selectedId }) {
 
     const csvColumns = [
         { key: "contactId", label: "Telefono" },
+        { key: "resultadoLlamada", label: "Resultado llamada" },
     ];
 
     const handleDownloadCsv = () => {
         const exportRows = filteredRows.map((row) => ({
             contactId: row?.contactId || "",
+            resultadoLlamada: getCallResult(row),
         }));
 
         downloadCsv(
@@ -188,11 +306,6 @@ export default function CallsContactsResultsTable({ selectedId }) {
     const handleClearFilters = () => {
         setSearch("");
         setCallResultFilter("ALL");
-    };
-
-    const handleLoadMore = () => {
-        if (loading || loadingMore || !nextToken) return;
-        loadMore();
     };
 
     return (
@@ -243,7 +356,7 @@ export default function CallsContactsResultsTable({ selectedId }) {
                                 )
                             }
                             onClick={handleRefresh}
-                            disabled={loading || loadingMore}
+                            disabled={loading}
                             sx={{ borderRadius: 2, fontWeight: 700 }}
                         >
                             {loading ? "Actualizando..." : "Actualizar"}
@@ -326,6 +439,7 @@ export default function CallsContactsResultsTable({ selectedId }) {
                 {loading ? (
                     <Box display="flex" flexDirection="column" alignItems="center" py={8}>
                         <CircularProgress size={32} thickness={5} sx={{ mb: 2 }} />
+
                         <Typography variant="body2" color="text.secondary">
                             Cargando contactos...
                         </Typography>
@@ -359,6 +473,7 @@ export default function CallsContactsResultsTable({ selectedId }) {
                                                     <Cell key={`cell-${index}`} fill={entry.color} />
                                                 ))}
                                             </Pie>
+
                                             <Tooltip />
                                             <Legend iconType="circle" />
                                         </PieChart>
@@ -391,19 +506,37 @@ export default function CallsContactsResultsTable({ selectedId }) {
 
                                     <Stack direction="row" justifyContent="space-between">
                                         <Typography variant="body2">Contactados:</Typography>
-                                        <Typography variant="body2" fontWeight={700}>
+
+                                        <Typography
+                                            variant="body2"
+                                            fontWeight={700}
+                                            color="success.main"
+                                        >
                                             {contactadosCount}
                                         </Typography>
                                     </Stack>
 
                                     <Stack direction="row" justifyContent="space-between">
-                                        <Typography variant="body2">No contactados:</Typography>
+                                        <Typography variant="body2">No contestadas:</Typography>
+
                                         <Typography
                                             variant="body2"
                                             fontWeight={700}
                                             color="error.main"
                                         >
-                                            {noContactadosCount}
+                                            {noContestadasCount}
+                                        </Typography>
+                                    </Stack>
+
+                                    <Stack direction="row" justifyContent="space-between">
+                                        <Typography variant="body2">Pendientes:</Typography>
+
+                                        <Typography
+                                            variant="body2"
+                                            fontWeight={700}
+                                            color="warning.main"
+                                        >
+                                            {pendientesCount}
                                         </Typography>
                                     </Stack>
                                 </Stack>
@@ -431,8 +564,9 @@ export default function CallsContactsResultsTable({ selectedId }) {
                                 </TableHead>
 
                                 <TableBody>
-                                    {filteredRows.map((r, idx) => {
-                                        const isMaxed = r?.attemptsMade >= r?.maxAttempts;
+                                    {paginatedRows.map((r, idx) => {
+                                        const isMaxed =
+                                            getAttemptsMade(r) >= getMaxAttempts(r);
 
                                         return (
                                             <TableRow
@@ -456,17 +590,11 @@ export default function CallsContactsResultsTable({ selectedId }) {
 
                                                 <TableCell>{show(r?.oficina)}</TableCell>
 
-
-
                                                 <TableCell>
                                                     <Typography
                                                         variant="body2"
-                                                        fontWeight={500}
-                                                        color={
-                                                            isContactado(r)
-                                                                ? "success.main"
-                                                                : "text.primary"
-                                                        }
+                                                        fontWeight={600}
+                                                        color={getCallResultTextColor(r)}
                                                     >
                                                         {show(getCallResult(r))}
                                                     </Typography>
@@ -475,10 +603,15 @@ export default function CallsContactsResultsTable({ selectedId }) {
                                                 <TableCell align="center">
                                                     <Typography
                                                         variant="body2"
-                                                        color={isMaxed ? "error.main" : "text.secondary"}
+                                                        color={
+                                                            isMaxed
+                                                                ? "error.main"
+                                                                : "text.secondary"
+                                                        }
                                                         fontWeight={isMaxed ? 700 : 400}
                                                     >
-                                                        {show(r?.attemptsMade)} / {show(r?.maxAttempts)}
+                                                        {show(r?.attemptsMade)} /{" "}
+                                                        {show(r?.maxAttempts)}
                                                     </Typography>
                                                 </TableCell>
                                             </TableRow>
@@ -508,26 +641,101 @@ export default function CallsContactsResultsTable({ selectedId }) {
                             </Table>
                         </TableContainer>
 
-                        <Box mt={3} display="flex" justifyContent="center">
-                            {nextToken ? (
-                                <Button
-                                    variant="contained"
-                                    onClick={handleLoadMore}
-                                    disabled={loading || loadingMore || !nextToken}
-                                    disableElevation
-                                    sx={{ borderRadius: 2, px: 4, fontWeight: 700 }}
-                                >
-                                    {loadingMore ? "Cargando..." : "Cargar más registros"}
-                                </Button>
-                            ) : (
-                                <Typography
-                                    variant="caption"
-                                    sx={{ color: "text.disabled", fontStyle: "italic" }}
-                                >
-                                    Fin de los registros.
-                                </Typography>
-                            )}
-                        </Box>
+                        {filteredRows.length > PAGE_SIZE && (
+                            <Paper
+                                variant="outlined"
+                                sx={{
+                                    mt: 3,
+                                    p: 1.5,
+                                    borderRadius: 3,
+                                    bgcolor: "grey.50",
+                                }}
+                            >
+                                <Stack spacing={1}>
+                                    <Stack
+                                        direction="row"
+                                        justifyContent="space-between"
+                                        alignItems="center"
+                                        spacing={2}
+                                    >
+                                        <Typography
+                                            variant="caption"
+                                            color="text.secondary"
+                                            fontWeight={700}
+                                        >
+                                            Mostrando {paginationStart}-{paginationEnd} de{" "}
+                                            {filteredRows.length}
+                                        </Typography>
+
+                                        <Typography
+                                            variant="caption"
+                                            color="text.disabled"
+                                            sx={{ whiteSpace: "nowrap" }}
+                                        >
+                                            Página {currentPage} de {totalPages}
+                                        </Typography>
+                                    </Stack>
+
+                                    <Box
+                                        sx={{
+                                            overflowX: "auto",
+                                            overflowY: "hidden",
+                                            pb: 0.5,
+                                            scrollSnapType: "x mandatory",
+
+                                            "&::-webkit-scrollbar": {
+                                                height: 6,
+                                            },
+                                            "&::-webkit-scrollbar-thumb": {
+                                                borderRadius: 999,
+                                                bgcolor: alpha(
+                                                    theme.palette.text.primary,
+                                                    0.18
+                                                ),
+                                            },
+                                            "&::-webkit-scrollbar-thumb:hover": {
+                                                bgcolor: alpha(
+                                                    theme.palette.text.primary,
+                                                    0.28
+                                                ),
+                                            },
+                                        }}
+                                    >
+                                        <Stack
+                                            direction="row"
+                                            spacing={1}
+                                            sx={{
+                                                width: "max-content",
+                                                minWidth: "100%",
+                                            }}
+                                        >
+                                            {pageNumbers.map((page) => {
+                                                const isActive = currentPage === page;
+
+                                                return (
+                                                    <Button
+                                                        key={page}
+                                                        size="small"
+                                                        variant={isActive ? "contained" : "outlined"}
+                                                        disableElevation
+                                                        onClick={() => setCurrentPage(page)}
+                                                        sx={{
+                                                            minWidth: 44,
+                                                            borderRadius: 999,
+                                                            fontWeight: 800,
+                                                            flexShrink: 0,
+                                                            scrollSnapAlign: "start",
+                                                        }}
+                                                    >
+                                                        {page}
+                                                    </Button>
+                                                );
+                                            })}
+                                        </Stack>
+                                    </Box>
+                                </Stack>
+                            </Paper>
+                        )}
                     </>
                 )}
             </CardContent>
